@@ -56,14 +56,23 @@ export async function POST(request: NextRequest) {
       role: user.role
     })
 
-    return NextResponse.json(
-      { 
-        token,
+    const response = NextResponse.json(
+      {
         role: user.role,
         name: user.name
       },
       { status: 200 }
-    )
+    );
+
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 60 * 60 * 24 // 1 day
+    });
+
+    return response;
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json(
