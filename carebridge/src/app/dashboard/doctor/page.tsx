@@ -13,16 +13,11 @@ export default function DoctorDashboard() {
   const router = useRouter()
 
   useEffect(() => {
-    // Middleware now handles authentication.
-  useEffect(() => {
-    // Middleware now handles authentication.
-    // We only need to get user info for display purposes.
+    const token = localStorage.getItem('token')
     const userName = localStorage.getItem('userName')
     const userRole = localStorage.getItem('userRole')
 
-    // The middleware should have already redirected if the role is incorrect.
-    if (userRole !== 'DOCTOR') {
-      // This is a fallback, in case of inconsistent state.
+    if (!token || userRole !== 'DOCTOR') {
       router.push('/auth/login')
       return
     }
@@ -49,7 +44,6 @@ export default function DoctorDashboard() {
     <main className="min-h-screen bg-slate-950 text-white">
       <div className="auth-gradient" aria-hidden />
       
-      {/* Header */}
       <header className="border-b border-white/10 bg-slate-900/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -70,10 +64,8 @@ export default function DoctorDashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {/* Patients Card */}
           <div className="glass-card border border-white/10 p-6 rounded-2xl">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-10 w-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
@@ -89,7 +81,6 @@ export default function DoctorDashboard() {
             </button>
           </div>
 
-          {/* Appointments Card */}
           <div className="glass-card border border-white/10 p-6 rounded-2xl">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-10 w-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
@@ -105,7 +96,6 @@ export default function DoctorDashboard() {
             </button>
           </div>
 
-          {/* Medical Records Card */}
           <div className="glass-card border border-white/10 p-6 rounded-2xl">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-10 w-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
@@ -121,7 +111,6 @@ export default function DoctorDashboard() {
             </button>
           </div>
 
-          {/* Analytics Card */}
           <div className="glass-card border border-white/10 p-6 rounded-2xl">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-10 w-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
@@ -138,7 +127,6 @@ export default function DoctorDashboard() {
           </div>
         </div>
 
-        {/* Today's Schedule */}
         <div className="mt-8 glass-card border border-white/10 p-6 rounded-2xl">
           <h3 className="font-semibold mb-4">Today's Schedule</h3>
           <div className="space-y-3">
