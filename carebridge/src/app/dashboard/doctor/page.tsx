@@ -14,6 +14,8 @@ export default function DoctorDashboard() {
 
   useEffect(() => {
     // Middleware now handles authentication.
+  useEffect(() => {
+    // Middleware now handles authentication.
     // We only need to get user info for display purposes.
     const userName = localStorage.getItem('userName')
     const userRole = localStorage.getItem('userRole')
