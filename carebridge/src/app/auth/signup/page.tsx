@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import AuthFlipWrapper from '../../AuthFlipWrapper'
+import AuthFlipWrapper from '../AuthFlipWrapper'
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
