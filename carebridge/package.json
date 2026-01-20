@@ -2,19 +2,13 @@
   "name": "carebridge",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build:dev": "env-cmd -f .env.development next build",
-    "build:staging": "env-cmd -f .env.staging next build",
-    "build:production": "env-cmd -f .env.production next build",
-    "start": "next start",
-    "lint": "eslint",
-    "setup-backend": "node setup-backend.js",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:reset": "prisma migrate reset",
-    "test:backend": "echo 'Visit http://localhost:3000/test-backend to test your backend'"
-  },
+"scripts": {
+  "dev": "next dev",
+  "build": "prisma generate && next build",
+  "postinstall": "prisma generate",
+  "start": "next start",
+  "lint": "eslint"
+},
   "dependencies": {
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
