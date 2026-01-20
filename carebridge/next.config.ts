@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Suppress workspace root warning
+  experimental: {
+    turbo: {
+      root: ".",
+    },
+  },
 };
 
 export default nextConfig;
