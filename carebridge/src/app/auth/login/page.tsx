@@ -2,170 +2,356 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { motion, AnimatePresence } from 'framer-motion'
+import * as Toast from '@radix-ui/react-toast'
 import AuthFlipWrapper from '../AuthFlipWrapper'
 
+// Validation schema
+const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required')
+})
+
+type LoginForm = z.infer<typeof loginSchema>
+
 export default function LoginPage() {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [toastOpen, setToastOpen] = useState(false)
+  const [toastMessage, setToastMessage] = useState({ type: 'success' as 'success' | 'error', text: '' })
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setMessage(null)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
+  } = useForm<LoginForm>({
+    mode: 'onChange'
+  })
+
+  const showToast = (type: 'success' | 'error', text: string) => {
+    setToastMessage({ type, text })
+    setToastOpen(true)
+  }
+
+  const onSubmit = async (data: LoginForm) => {
+    // Validate the data manually
+    const validation = loginSchema.safeParse(data)
+    if (!validation.success) {
+      const firstError = validation.error.issues[0]
+      showToast('error', firstError.message)
+      return
+    }
 
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
       })
 
-      const data = await response.json()
+      const result = await response.json()
 
       if (response.ok) {
         // Success - store token and user info
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('userRole', data.role)
-        localStorage.setItem('userName', data.name)
+        localStorage.setItem('token', result.token)
+        localStorage.setItem('userRole', result.role)
+        localStorage.setItem('userName', result.name)
 
-        setMessage({ type: 'success', text: `Welcome back, ${data.name}! Redirecting to your ${data.role.toLowerCase()} dashboard...` })
+        showToast('success', `Welcome back, ${result.name}! Redirecting to your ${result.role.toLowerCase()} dashboard...`)
         
         // Redirect based on role
         setTimeout(() => {
-          if (data.role === 'DOCTOR') {
+          if (result.role === 'DOCTOR') {
             router.push('/dashboard/doctor')
           } else {
             router.push('/dashboard/patient')
           }
         }, 1500)
       } else {
-        // Error
-        setMessage({ type: 'error', text: data.error || 'Login failed. Please try again.' })
+        showToast('error', result.error || 'Login failed. Please try again.')
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Network error. Please check your connection and try again.' })
-    } finally {
-      setLoading(false)
+      showToast('error', 'Network error. Please check your connection and try again.')
     }
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }))
   }
 
   return (
     <AuthFlipWrapper flipKey="login">
-      <main className="min-h-screen relative overflow-hidden bg-slate-950 text-white flex items-center justify-center px-4 py-12">
-      <div className="auth-gradient" aria-hidden />
-      <div className="floating-dots" aria-hidden />
+      <Toast.Provider swipeDirection="right">
+        <motion.main 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-6"
+        >
+          <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-16 items-center">
+            
+            {/* Left Side - Welcome Content */}
+            <motion.div 
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="space-y-8"
+            >
+              {/* Logo */}
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="flex items-center gap-3"
+              >
+                <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
+                  <span className="text-white font-bold">C</span>
+                </div>
+                <span className="text-2xl font-bold">CareBridge</span>
+              </motion.div>
 
-      <div className="relative w-full max-w-4xl grid md:grid-cols-2 gap-8 items-center glass-card border border-white/10 shadow-2xl px-6 py-8 md:px-10 md:py-12">
-        <div className="space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 text-emerald-300 px-3 py-1 text-xs font-semibold border border-emerald-500/20">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            Secure & HIPAA-ready
-          </div>
-          <div className="space-y-3">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-              Welcome back to CareBridge
-            </h1>
-            <p className="text-slate-300 text-sm md:text-base leading-relaxed">
-              Access your appointments, patient charts, and care teams in a
-              beautifully simple workspace. Your data is protected with
-              end-to-end security.
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-6 rounded-2xl bg-slate-900/50 border border-white/10 p-6 md:p-8 shadow-lg">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">Login</h2>
-            <div className="shimmer-badge">New UI</div>
-          </div>
-
-          {/* Success/Error Message */}
-          {message && (
-            <div className={`p-4 rounded-lg border ${
-              message.type === 'success' 
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
-                : 'bg-red-500/10 border-red-500/30 text-red-300'
-            }`}>
-              <div className="flex items-center gap-2">
-                {message.type === 'success' ? (
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                )}
-                <span className="text-sm">{message.text}</span>
+              <div className="space-y-6">
+                <motion.h1 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="text-4xl lg:text-5xl font-bold text-white"
+                >
+                  Welcome back
+                </motion.h1>
+                <motion.p 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                  className="text-slate-400 text-lg leading-relaxed max-w-md"
+                >
+                  Sign in to access your health dashboard
+                </motion.p>
               </div>
-            </div>
-          )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <label className="text-sm text-slate-200">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="doctor@carebridge.com"
-                className="fancy-input"
-                required
-                disabled={loading}
-              />
-            </div>
+              {/* Feature Cards */}
+              <motion.div 
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                className="space-y-4 max-w-md"
+              >
+                <motion.div 
+                  whileHover={{ scale: 1.02, x: 10 }}
+                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex items-center gap-4"
+                >
+                  <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                    <span className="text-emerald-400">🔒</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium text-sm">End-to-end encrypted</p>
+                  </div>
+                </motion.div>
+                
+                <motion.div 
+                  whileHover={{ scale: 1.02, x: 10 }}
+                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4"
+                >
+                  <p className="text-slate-300 text-sm text-center">
+                    Trusted by healthcare professionals worldwide
+                  </p>
+                </motion.div>
+              </motion.div>
+            </motion.div>
 
-            <div className="space-y-2">
-              <label className="text-sm text-slate-200">Password</label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="fancy-input"
-                required
-                disabled={loading}
-              />
-            </div>
-
-            <button 
-              type="submit" 
-              className="cta-button"
-              disabled={loading}
+            {/* Right Side - Login Form */}
+            <motion.div 
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="max-w-md mx-auto w-full"
             >
-              <span>{loading ? 'Logging in...' : 'Login'}</span>
-              <span className="cta-glow" aria-hidden />
-            </button>
-          </form>
+              <motion.form 
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                onSubmit={handleSubmit(onSubmit)} 
+                className="space-y-6"
+              >
+                <div className="space-y-4">
+                  <motion.div 
+                    whileHover={{ scale: 1.01 }}
+                    className="group"
+                  >
+                    <input
+                      {...register('email', { 
+                        required: 'Email is required',
+                        pattern: { value: /^\S+@\S+$/i, message: 'Please enter a valid email address' }
+                      })}
+                      type="email"
+                      placeholder="you@example.com"
+                      className="w-full px-4 py-4 bg-slate-800/60 border border-slate-700/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300 group-hover:border-slate-600/70"
+                      disabled={isSubmitting}
+                    />
+                    <AnimatePresence>
+                      {errors.email && (
+                        <motion.p 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="text-red-400 text-sm mt-1"
+                        >
+                          {errors.email.message}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
 
-          <p className="text-sm text-slate-400 text-center">
-            Don't have an account?{" "}
-            <a
-              href="/auth/signup"
-              className="text-emerald-300 hover:text-emerald-200 underline-offset-4 hover:underline transition-colors"
-            >
-              Sign up
-            </a>
-          </p>
-        </div>
-      </div>
-    </main>
+                  <motion.div 
+                    whileHover={{ scale: 1.01 }}
+                    className="relative group"
+                  >
+                    <input
+                      {...register('password', { 
+                        required: 'Password is required'
+                      })}
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      className="w-full px-4 py-4 pr-12 bg-slate-800/60 border border-slate-700/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300 group-hover:border-slate-600/70"
+                      disabled={isSubmitting}
+                    />
+                    <motion.button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-emerald-400 transition-all duration-300"
+                      disabled={isSubmitting}
+                    >
+                      <AnimatePresence mode="wait">
+                        {showPassword ? (
+                          <motion.svg 
+                            key="hide"
+                            initial={{ opacity: 0, rotate: 180 }}
+                            animate={{ opacity: 1, rotate: 0 }}
+                            exit={{ opacity: 0, rotate: -180 }}
+                            className="w-5 h-5" 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                          </motion.svg>
+                        ) : (
+                          <motion.svg 
+                            key="show"
+                            initial={{ opacity: 0, rotate: 180 }}
+                            animate={{ opacity: 1, rotate: 0 }}
+                            exit={{ opacity: 0, rotate: -180 }}
+                            className="w-5 h-5" 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </motion.svg>
+                        )}
+                      </AnimatePresence>
+                    </motion.button>
+                    <AnimatePresence>
+                      {errors.password && (
+                        <motion.p 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="text-red-400 text-sm mt-1"
+                        >
+                          {errors.password.message}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                </div>
+
+                <motion.button 
+                  type="submit" 
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={isSubmitting}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-emerald-500/25"
+                >
+                  <AnimatePresence mode="wait">
+                    {isSubmitting ? (
+                      <motion.div
+                        key="loading"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-2"
+                      >
+                        <motion.svg 
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="h-5 w-5" 
+                          fill="none" 
+                          viewBox="0 0 24 24"
+                        >
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </motion.svg>
+                        <span>Signing in...</span>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="submit"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-2"
+                      >
+                        <span>Sign In</span>
+                        <motion.span
+                          animate={{ x: [0, 5, 0] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        >
+                          →
+                        </motion.span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
+              </motion.form>
+
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                className="text-slate-400 text-center mt-6"
+              >
+                Don't have an account?{" "}
+                <motion.a
+                  href="/auth/signup"
+                  whileHover={{ scale: 1.05 }}
+                  className="text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+                >
+                  Create account
+                </motion.a>
+              </motion.p>
+            </motion.div>
+          </div>
+        </motion.main>
+
+        {/* Toast Notifications */}
+        <Toast.Root
+          className={`${
+            toastMessage.type === 'success' 
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
+              : 'bg-red-500/10 border-red-500/30 text-red-300'
+          } rounded-xl border p-4 shadow-lg`}
+          open={toastOpen}
+          onOpenChange={setToastOpen}
+        >
+          <Toast.Title className="font-semibold mb-1">
+            {toastMessage.type === 'success' ? 'Success!' : 'Error'}
+          </Toast.Title>
+          <Toast.Description className="text-sm">
+            {toastMessage.text}
+          </Toast.Description>
+        </Toast.Root>
+        <Toast.Viewport className="fixed bottom-0 right-0 flex flex-col p-6 gap-2 w-96 max-w-[100vw] m-0 list-none z-50" />
+      </Toast.Provider>
     </AuthFlipWrapper>
   );
 }
