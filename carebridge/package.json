@@ -19,11 +19,22 @@
     "bcryptjs": "^3.0.3",
     "env-cmd": "^11.0.0",
     "framer-motion": "^12.27.5",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:reset": "prisma migrate reset"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.19.1",
+    "bcryptjs": "^3.0.3",
+    "framer-motion": "^12.27.0",
     "ioredis": "^5.9.2",
     "jsonwebtoken": "^9.0.3",
     "next": "16.1.2",
-    "pg": "^8.17.1",
-    "prisma": "^7.2.0",
+    "prisma": "^5.19.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.1",
@@ -41,5 +52,9 @@
     "eslint-config-next": "16.1.2",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   }
 }
