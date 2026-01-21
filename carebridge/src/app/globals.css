@@ -337,3 +337,33 @@ a {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Profile dropdown styles */
+.profile-dropdown {
+  position: fixed !important;
+  z-index: 10000 !important;
+  pointer-events: auto !important;
+}
+
+.profile-dropdown-backdrop {
+  position: fixed !important;
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure no parent containers clip the dropdown */
+.dashboard-container {
+  overflow: visible !important;
+}
+
+.dashboard-header {
+  overflow: visible !important;
+  position: relative !important;
+  z-index: 1000 !important;
+}
+
+/* Prevent layout shifts */
+.profile-button-container {
+  position: relative !important;
+  z-index: 10000 !important;
+}
