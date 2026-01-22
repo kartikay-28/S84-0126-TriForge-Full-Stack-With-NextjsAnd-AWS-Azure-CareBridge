@@ -1,6 +1,23 @@
+// TEMPORARILY COMMENTED OUT - Missing database models
+// These routes will be enabled once the required database models are added
+
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/jwt'
+
+export async function PUT(_request: NextRequest, { params: _params }: { params: Promise<{ grantId: string }> }) {
+  return NextResponse.json(
+    { error: 'Access API temporarily unavailable' },
+    { status: 503 }
+  )
+}
+
+export async function DELETE(_request: NextRequest, { params: _params }: { params: Promise<{ grantId: string }> }) {
+  return NextResponse.json(
+    { error: 'Access API temporarily unavailable' },
+    { status: 503 }
+  )
+}
+
+/*
 
 // PUT /api/patient/access/[grantId] - Update access grant status
 export async function PUT(
@@ -149,4 +166,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-}
+}*/
