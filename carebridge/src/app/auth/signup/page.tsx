@@ -7,6 +7,8 @@ import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import * as Toast from '@radix-ui/react-toast'
 import AuthFlipWrapper from '../AuthFlipWrapper'
+import ThemeToggle from '@/components/ThemeToggle'
+import Logo from '@/components/Logo'
 
 // Validation schema
 const signupSchema = z.object({
@@ -81,7 +83,13 @@ export default function SignupPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
           className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-6 py-8"
+          style={{ background: 'var(--background)', color: 'var(--foreground)' }}
         >
+          {/* Theme Toggle - Fixed Position */}
+          <div className="fixed top-6 right-6 z-50">
+            <ThemeToggle />
+          </div>
+          
           <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-16 items-center">
             
             {/* Left Side - Welcome Content */}
@@ -96,9 +104,7 @@ export default function SignupPage() {
                 whileHover={{ scale: 1.05 }}
                 className="flex items-center gap-3"
               >
-                <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold">C</span>
-                </div>
+                <Logo size="lg" />
                 <span className="text-2xl font-bold">CareBridge</span>
               </motion.div>
 
@@ -132,7 +138,7 @@ export default function SignupPage() {
               >
                 <motion.div 
                   whileHover={{ scale: 1.02, x: 10 }}
-                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex items-center gap-4"
+                  className="clean-card p-4 flex items-center gap-4"
                 >
                   <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
                     <span className="text-emerald-400">💚</span>
@@ -144,7 +150,7 @@ export default function SignupPage() {
                 
                 <motion.div 
                   whileHover={{ scale: 1.02, x: 10 }}
-                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex items-center gap-4"
+                  className="clean-card p-4 flex items-center gap-4"
                 >
                   <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
                     <span className="text-emerald-400">🔒</span>
@@ -189,7 +195,7 @@ export default function SignupPage() {
                   className={`group p-6 rounded-xl border transition-all duration-300 ${
                     watchedRole === 'PATIENT'
                       ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-lg shadow-emerald-500/25'
-                      : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:border-slate-600 hover:bg-slate-800/70'
+                      : 'clean-card text-slate-300 hover:border-slate-600'
                   }`}
                 >
                   <div className="text-center">
@@ -213,7 +219,7 @@ export default function SignupPage() {
                   className={`group p-6 rounded-xl border transition-all duration-300 ${
                     watchedRole === 'DOCTOR'
                       ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-lg shadow-emerald-500/25'
-                      : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:border-slate-600 hover:bg-slate-800/70'
+                      : 'clean-card text-slate-300 hover:border-slate-600'
                   }`}
                 >
                   <div className="text-center">
@@ -256,7 +262,7 @@ export default function SignupPage() {
                       minLength: { value: 2, message: 'Name must be at least 2 characters' }
                     })}
                     placeholder={watchedRole === 'DOCTOR' ? 'Dr. John Doe' : 'John Smith'}
-                    className="w-full px-4 py-4 bg-slate-800/60 border border-slate-700/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300 group-hover:border-slate-600/70"
+                    className="clean-input"
                     disabled={isSubmitting}
                   />
                   <AnimatePresence>
@@ -284,7 +290,7 @@ export default function SignupPage() {
                     })}
                     type="email"
                     placeholder="you@example.com"
-                    className="w-full px-4 py-4 bg-slate-800/60 border border-slate-700/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300 group-hover:border-slate-600/70"
+                    className="clean-input"
                     disabled={isSubmitting}
                   />
                   <AnimatePresence>
@@ -312,7 +318,7 @@ export default function SignupPage() {
                     })}
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    className="w-full px-4 py-4 pr-12 bg-slate-800/60 border border-slate-700/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300 group-hover:border-slate-600/70"
+                    className="clean-input pr-12"
                     disabled={isSubmitting}
                   />
                   <motion.button
@@ -399,7 +405,7 @@ export default function SignupPage() {
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   disabled={isSubmitting || !isValid}
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-emerald-500/25"
+                  className="cta-button w-full"
                 >
                   <AnimatePresence mode="wait">
                     {isSubmitting ? (

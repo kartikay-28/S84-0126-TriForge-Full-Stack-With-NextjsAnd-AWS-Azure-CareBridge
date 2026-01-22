@@ -7,6 +7,8 @@ import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import * as Toast from '@radix-ui/react-toast'
 import AuthFlipWrapper from '../AuthFlipWrapper'
+import ThemeToggle from '@/components/ThemeToggle'
+import Logo from '@/components/Logo'
 
 // Validation schema
 const loginSchema = z.object({
@@ -85,7 +87,13 @@ export default function LoginPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
           className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-6"
+          style={{ background: 'var(--background)', color: 'var(--foreground)' }}
         >
+          {/* Theme Toggle - Fixed Position */}
+          <div className="fixed top-6 right-6 z-50">
+            <ThemeToggle />
+          </div>
+          
           <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-16 items-center">
             
             {/* Left Side - Welcome Content */}
@@ -100,9 +108,7 @@ export default function LoginPage() {
                 whileHover={{ scale: 1.05 }}
                 className="flex items-center gap-3"
               >
-                <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold">C</span>
-                </div>
+                <Logo size="lg" />
                 <span className="text-2xl font-bold">CareBridge</span>
               </motion.div>
 
@@ -134,7 +140,7 @@ export default function LoginPage() {
               >
                 <motion.div 
                   whileHover={{ scale: 1.02, x: 10 }}
-                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex items-center gap-4"
+                  className="clean-card p-4 flex items-center gap-4"
                 >
                   <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
                     <span className="text-emerald-400">🔒</span>
@@ -146,7 +152,7 @@ export default function LoginPage() {
                 
                 <motion.div 
                   whileHover={{ scale: 1.02, x: 10 }}
-                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4"
+                  className="clean-card p-4"
                 >
                   <p className="text-slate-300 text-sm text-center">
                     Trusted by healthcare professionals worldwide
@@ -181,7 +187,7 @@ export default function LoginPage() {
                       })}
                       type="email"
                       placeholder="you@example.com"
-                      className="w-full px-4 py-4 bg-slate-800/60 border border-slate-700/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300 group-hover:border-slate-600/70"
+                      className="clean-input"
                       disabled={isSubmitting}
                     />
                     <AnimatePresence>
@@ -208,7 +214,7 @@ export default function LoginPage() {
                       })}
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
-                      className="w-full px-4 py-4 pr-12 bg-slate-800/60 border border-slate-700/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all duration-300 group-hover:border-slate-600/70"
+                      className="clean-input pr-12"
                       disabled={isSubmitting}
                     />
                     <motion.button
@@ -270,7 +276,7 @@ export default function LoginPage() {
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   disabled={isSubmitting}
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-emerald-500/25"
+                  className="cta-button w-full"
                 >
                   <AnimatePresence mode="wait">
                     {isSubmitting ? (
