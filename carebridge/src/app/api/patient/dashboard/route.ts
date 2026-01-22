@@ -1,3 +1,16 @@
+// TEMPORARILY COMMENTED OUT - Missing database models
+// This route will be enabled once the required database models are added
+
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function GET(_request: NextRequest) {
+  return NextResponse.json(
+    { error: 'Dashboard API temporarily unavailable' },
+    { status: 503 }
+  )
+}
+
+/*
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/jwt'
@@ -162,3 +175,4 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+*/

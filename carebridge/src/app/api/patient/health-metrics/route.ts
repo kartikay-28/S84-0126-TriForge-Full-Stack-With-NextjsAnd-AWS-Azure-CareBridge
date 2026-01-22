@@ -1,6 +1,23 @@
+// TEMPORARILY COMMENTED OUT - Missing database models
+// These routes will be enabled once the required database models are added
+
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/jwt'
+
+export async function GET(_request: NextRequest) {
+  return NextResponse.json(
+    { error: 'Health metrics API temporarily unavailable' },
+    { status: 503 }
+  )
+}
+
+export async function POST(_request: NextRequest) {
+  return NextResponse.json(
+    { error: 'Health metrics API temporarily unavailable' },
+    { status: 503 }
+  )
+}
+
+/*
 
 // GET /api/patient/health-metrics - Get health metrics for the patient
 export async function GET(request: NextRequest) {
@@ -151,4 +168,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+}*/
