@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import * as Dialog from '@radix-ui/react-dialog'
 import { createPortal } from 'react-dom'
+import FileUpload from '@/components/FileUpload'
+import { useFileUpload } from '@/hooks/useFileUpload'
 
 interface User {
   name: string
@@ -20,6 +22,9 @@ export default function PatientDashboard() {
   const [doctorEmail, setDoctorEmail] = useState('')
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
+
+  // File upload hook
+  const { uploadFile, isUploading, error: uploadError } = useFileUpload()
 
   useEffect(() => {
     setMounted(true)
@@ -53,10 +58,16 @@ export default function PatientDashboard() {
     setShowGrantAccessModal(false)
   }
 
-  const handleUploadRecord = () => {
-    // TODO: Implement upload record functionality
-    console.log('Uploading medical record')
-    setShowUploadModal(false)
+  const handleUploadRecord = async (file: File, metadata: { title: string; description: string; recordType: string }) => {
+    try {
+      await uploadFile(file, metadata)
+      setShowUploadModal(false)
+      // TODO: Refresh records list
+      alert('Medical record uploaded successfully!')
+    } catch (error) {
+      console.error('Upload failed:', error)
+      alert('Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    }
   }
 
   if (!user) {
@@ -89,11 +100,10 @@ export default function PatientDashboard() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveTab('dashboard')}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  activeTab === 'dashboard' 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'dashboard'
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
@@ -106,11 +116,10 @@ export default function PatientDashboard() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveTab('records')}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  activeTab === 'records' 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'records'
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -123,11 +132,10 @@ export default function PatientDashboard() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveTab('access')}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  activeTab === 'access' 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'access'
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
@@ -186,30 +194,30 @@ export default function PatientDashboard() {
                   <span className="text-white font-bold">{user.name.charAt(0).toUpperCase()}</span>
                 </motion.button>
               </div>
-              
+
               {/* Profile Dropdown Portal - Renders at document body level */}
               {mounted && showProfileMenu && createPortal(
-                <div 
+                <div
                   className="fixed inset-0"
-                  style={{ 
+                  style={{
                     zIndex: 999999,
                     pointerEvents: 'auto'
                   }}
                 >
                   {/* Backdrop */}
-                  <div 
+                  <div
                     className="absolute inset-0"
                     style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
                     onClick={() => setShowProfileMenu(false)}
                   />
-                  
+
                   {/* Dropdown Menu */}
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: -10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -10 }}
                     className="absolute bg-slate-800 border border-slate-700 rounded-lg shadow-2xl w-48 py-2"
-                    style={{ 
+                    style={{
                       top: '80px',
                       right: '24px',
                       zIndex: 1000000,
@@ -303,7 +311,7 @@ export default function PatientDashboard() {
               {/* Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 {/* Medical Records */}
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.02 }}
                   className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6"
                 >
@@ -327,7 +335,7 @@ export default function PatientDashboard() {
                 </motion.div>
 
                 {/* Active Consents */}
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.02 }}
                   className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6"
                 >
@@ -349,7 +357,7 @@ export default function PatientDashboard() {
                 </motion.div>
 
                 {/* Pending Requests */}
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.02 }}
                   className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6"
                 >
@@ -380,7 +388,7 @@ export default function PatientDashboard() {
                     <h3 className="font-semibold text-white">Messages</h3>
                     <a href="#" className="text-emerald-400 text-sm hover:text-emerald-300">View All →</a>
                   </div>
-                  
+
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
                       <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -404,14 +412,14 @@ export default function PatientDashboard() {
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="font-semibold text-white">View All</h3>
-                    <button 
+                    <button
                       onClick={() => setActiveTab('records')}
                       className="text-emerald-400 text-sm hover:text-emerald-300"
                     >
                       View All →
                     </button>
                   </div>
-                  
+
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
                       <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -442,7 +450,7 @@ export default function PatientDashboard() {
                   Upload Record
                 </motion.button>
               </div>
-              
+
               <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8">
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <div className="w-20 h-20 bg-slate-700/50 rounded-full flex items-center justify-center mb-6">
@@ -481,7 +489,7 @@ export default function PatientDashboard() {
                   Grant New Access
                 </motion.button>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">Active Consents</h3>
@@ -495,7 +503,7 @@ export default function PatientDashboard() {
                     <p className="text-slate-400 text-sm">Doctors you've granted access to will appear here</p>
                   </div>
                 </div>
-                
+
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">Pending Requests</h3>
                   <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -524,7 +532,7 @@ export default function PatientDashboard() {
               <Dialog.Description className="text-slate-400 mb-6">
                 Enter your doctor's email address to grant them access to your medical records.
               </Dialog.Description>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -538,7 +546,7 @@ export default function PatientDashboard() {
                     className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   />
                 </div>
-                
+
                 <div className="flex gap-3 pt-4">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -567,60 +575,35 @@ export default function PatientDashboard() {
         <Dialog.Root open={showUploadModal} onOpenChange={setShowUploadModal}>
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-slate-700 rounded-xl p-6 w-full max-w-md">
+            <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-slate-700 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <Dialog.Title className="text-xl font-bold text-white mb-4">
                 Upload Medical Record
               </Dialog.Title>
               <Dialog.Description className="text-slate-400 mb-6">
                 Upload a new medical record to your secure health profile.
               </Dialog.Description>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Record Type
-                  </label>
-                  <select className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
-                    <option value="">Select record type</option>
-                    <option value="lab-results">Lab Results</option>
-                    <option value="prescription">Prescription</option>
-                    <option value="imaging">Medical Imaging</option>
-                    <option value="consultation">Consultation Notes</option>
-                    <option value="other">Other</option>
-                  </select>
+
+              {/* Upload Error Display */}
+              {uploadError && (
+                <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                  <p className="text-red-300 text-sm">{uploadError}</p>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Upload File
-                  </label>
-                  <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center">
-                    <svg className="w-8 h-8 text-slate-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <p className="text-slate-400 text-sm">Click to upload or drag and drop</p>
-                    <p className="text-slate-500 text-xs mt-1">PDF, JPG, PNG up to 10MB</p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3 pt-4">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleUploadRecord}
-                    className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-lg transition-colors"
-                  >
-                    Upload Record
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowUploadModal(false)}
-                    className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 rounded-lg transition-colors"
-                  >
-                    Cancel
-                  </motion.button>
-                </div>
+              )}
+
+              {/* File Upload Component */}
+              <FileUpload onUpload={handleUploadRecord} isUploading={isUploading} />
+
+              {/* Cancel Button */}
+              <div className="mt-6 pt-4 border-t border-slate-700">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowUploadModal(false)}
+                  disabled={isUploading}
+                  className="w-full bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 text-white font-semibold py-3 rounded-lg transition-colors"
+                >
+                  Cancel
+                </motion.button>
               </div>
             </Dialog.Content>
           </Dialog.Portal>
