@@ -98,6 +98,53 @@ body {
   border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
 }
 
+/* Light mode hover effects for all divs */
+.light .hover-lift:hover {
+  box-shadow: var(--shadow-green-xl) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  background: rgba(16, 185, 129, 0.02) !important;
+  transform: translateY(-4px) !important;
+}
+
+.light .clean-card:hover {
+  box-shadow: var(--shadow-green-lg) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  background: rgba(16, 185, 129, 0.02) !important;
+  transform: translateY(-2px) !important;
+}
+
+.light .glass-surface:hover {
+  box-shadow: var(--shadow-green-md) !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+  background: rgba(16, 185, 129, 0.02) !important;
+}
+
+/* Light mode specific div hover effects */
+.light div[class*="bg-slate-800"]:hover,
+.light div[class*="bg-slate-900"]:hover {
+  box-shadow: var(--shadow-green-lg) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  background: rgba(16, 185, 129, 0.02) !important;
+  transform: translateY(-2px) !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Light mode dashboard card hover effects */
+.light .dashboard-card:hover {
+  box-shadow: var(--shadow-green-lg) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  background: rgba(16, 185, 129, 0.02) !important;
+  transform: translateY(-3px) !important;
+}
+
+/* Light mode stats card hover effects */
+.light .stats-card:hover {
+  box-shadow: var(--shadow-green-lg) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  background: rgba(16, 185, 129, 0.03) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+}
+
 /* Dark Mode Styles */
 .dark {
   /* Root variables for dark mode */
@@ -1014,4 +1061,56 @@ label {
   background: rgba(16, 185, 129, 0.04) !important;
   border-color: rgba(16, 185, 129, 0.1) !important;
   box-shadow: 0 6px 20px -3px rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Light mode comprehensive hover effects */
+.light [class*="rounded"]:hover,
+.light [class*="border"]:hover {
+  box-shadow: var(--shadow-green-md) !important;
+  border-color: rgba(16, 185, 129, 0.25) !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Light mode motion div hover effects */
+.light motion-div:hover,
+.light [class*="motion"]:hover {
+  box-shadow: var(--shadow-green-lg) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  background: rgba(16, 185, 129, 0.02) !important;
+}
+
+/* Light mode card container hover effects */
+.light [class*="p-6"]:hover,
+.light [class*="p-8"]:hover {
+  box-shadow: var(--shadow-green-md) !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+  background: rgba(16, 185, 129, 0.01) !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Light mode button hover enhancements */
+.light button:hover {
+  box-shadow: var(--shadow-green-sm) !important;
+  transform: translateY(-1px) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Light mode specific green hover for patient dashboard */
+.light .dashboard-container div[class*="bg-slate"]:hover {
+  box-shadow: 0 10px 25px -3px rgba(16, 185, 129, 0.2), 0 4px 6px -2px rgba(16, 185, 129, 0.1) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  background: rgba(16, 185, 129, 0.02) !important;
+  transform: translateY(-2px) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Light mode enhanced green shadows */
+.light .hover-lift:hover {
+  box-shadow: 
+    0 20px 35px -5px rgba(16, 185, 129, 0.25),
+    0 10px 20px -3px rgba(16, 185, 129, 0.15),
+    0 0 0 1px rgba(16, 185, 129, 0.1) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  background: rgba(16, 185, 129, 0.02) !important;
+  transform: translateY(-4px) !important;
 }

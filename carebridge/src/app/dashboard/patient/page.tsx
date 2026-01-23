@@ -275,7 +275,7 @@ export default function PatientDashboard() {
             <>
               {/* Health Metrics */}
               <div className="mb-8">
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
                       <span className="text-emerald-400">💚</span>
@@ -284,7 +284,7 @@ export default function PatientDashboard() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-slate-900/60 rounded-lg p-4">
+                    <div className="bg-slate-900/60 rounded-lg p-4 hover-lift">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-slate-400">Blood Pressure</span>
                         <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
@@ -292,7 +292,7 @@ export default function PatientDashboard() {
                       <p className="text-lg font-semibold text-white">Normal</p>
                     </div>
 
-                    <div className="bg-slate-900/60 rounded-lg p-4">
+                    <div className="bg-slate-900/60 rounded-lg p-4 hover-lift">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-slate-400">Heart Rate</span>
                         <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
@@ -300,7 +300,7 @@ export default function PatientDashboard() {
                       <p className="text-lg font-semibold text-white">Normal</p>
                     </div>
 
-                    <div className="bg-slate-900/60 rounded-lg p-4">
+                    <div className="bg-slate-900/60 rounded-lg p-4 hover-lift">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-slate-400">Last Checkup</span>
                         <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
@@ -316,7 +316,7 @@ export default function PatientDashboard() {
                 {/* Medical Records */}
                 <motion.div
                   whileHover={{ scale: 1.02 }}
-                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6"
+                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift"
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
@@ -340,7 +340,7 @@ export default function PatientDashboard() {
                 {/* Active Consents */}
                 <motion.div
                   whileHover={{ scale: 1.02 }}
-                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6"
+                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift"
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
@@ -362,7 +362,7 @@ export default function PatientDashboard() {
                 {/* Pending Requests */}
                 <motion.div
                   whileHover={{ scale: 1.02 }}
-                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6"
+                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift"
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
@@ -386,7 +386,7 @@ export default function PatientDashboard() {
               {/* Bottom Sections */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Messages */}
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="font-semibold text-white">Messages</h3>
                     <a href="#" className="text-emerald-400 text-sm hover:text-emerald-300">View All →</a>
@@ -412,7 +412,7 @@ export default function PatientDashboard() {
                 </div>
 
                 {/* Records */}
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="font-semibold text-white">View All</h3>
                     <button
@@ -454,7 +454,7 @@ export default function PatientDashboard() {
                 </motion.button>
               </div>
 
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8">
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8 hover-lift">
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <div className="w-20 h-20 bg-slate-700/50 rounded-full flex items-center justify-center mb-6">
                     <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -494,7 +494,7 @@ export default function PatientDashboard() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift">
                   <h3 className="text-lg font-semibold text-white mb-4">Active Consents</h3>
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
@@ -507,7 +507,7 @@ export default function PatientDashboard() {
                   </div>
                 </div>
 
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift">
                   <h3 className="text-lg font-semibold text-white mb-4">Pending Requests</h3>
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
