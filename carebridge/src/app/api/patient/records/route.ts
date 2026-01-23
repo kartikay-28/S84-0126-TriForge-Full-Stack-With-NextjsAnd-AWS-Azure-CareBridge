@@ -1,23 +1,7 @@
-// TEMPORARILY COMMENTED OUT - Missing database models
-// These routes will be enabled once the required database models are added
-
 import { NextRequest, NextResponse } from 'next/server'
-
-export async function GET(_request: NextRequest) {
-  return NextResponse.json(
-    { error: 'Records API temporarily unavailable' },
-    { status: 503 }
-  )
-}
-
-export async function POST(_request: NextRequest) {
-  return NextResponse.json(
-    { error: 'Records API temporarily unavailable' },
-    { status: 503 }
-  )
-}
-
-/*
+import { verifyToken } from '@/lib/jwt'
+import { handleFileUpload, validateFileType, validateFileSize } from '@/lib/file-upload'
+import { prisma } from '@/lib/prisma'
 
 // GET /api/patient/records - Get all medical records for the patient
 export async function GET(request: NextRequest) {
@@ -31,7 +15,17 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.substring(7)
-    const payload = verifyToken(token)
+    
+    let payload
+    try {
+      payload = verifyToken(token)
+    } catch (error) {
+      console.error('Token verification failed:', error)
+      return NextResponse.json(
+        { error: 'Invalid or expired token. Please login again.' },
+        { status: 401 }
+      )
+    }
 
     if (payload.role !== 'PATIENT') {
       return NextResponse.json(
@@ -40,6 +34,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Get records from database
     const records = await prisma.medicalRecord.findMany({
       where: {
         patientId: payload.userId
@@ -48,8 +43,11 @@ export async function GET(request: NextRequest) {
         uploadedAt: 'desc'
       }
     })
-
-    return NextResponse.json({ records })
+    
+    return NextResponse.json({ 
+      records,
+      message: "Records loaded from database"
+    })
   } catch (error) {
     console.error('Get records error:', error)
     return NextResponse.json(
@@ -71,7 +69,17 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.substring(7)
-    const payload = verifyToken(token)
+    
+    let payload
+    try {
+      payload = verifyToken(token)
+    } catch (error) {
+      console.error('Token verification failed:', error)
+      return NextResponse.json(
+        { error: 'Invalid or expired token. Please login again.' },
+        { status: 401 }
+      )
+    }
 
     if (payload.role !== 'PATIENT') {
       return NextResponse.json(
@@ -125,7 +133,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create record in database
+    // Save to database
     const record = await prisma.medicalRecord.create({
       data: {
         title,
@@ -142,7 +150,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         message: 'Medical record uploaded successfully',
-        record 
+        record
       },
       { status: 201 }
     )
@@ -153,4 +161,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}*/
+}

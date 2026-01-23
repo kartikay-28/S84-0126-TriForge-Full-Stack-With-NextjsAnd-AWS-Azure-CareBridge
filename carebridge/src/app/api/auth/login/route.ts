@@ -59,7 +59,8 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json(
       {
         role: user.role,
-        name: user.name
+        name: user.name,
+        token: token  // Add token to response body
       },
       { status: 200 }
     );
