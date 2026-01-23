@@ -1,14 +1,10 @@
 import { NextRequest } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { existsSync } from 'fs'
-import path from 'path'
 
 export interface UploadedFile {
   fileName: string
   originalName: string
   mimeType: string
   size: number
-  filePath: string
   fileUrl: string
 }
 
@@ -21,38 +17,60 @@ export async function handleFileUpload(request: NextRequest): Promise<{
     const files: UploadedFile[] = []
     const fields: Record<string, string> = {}
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'medical-records')
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true })
-    }
+    // Check if we're in production (Vercel) or development
+    const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL
 
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) {
-        // Handle file upload
         const file = value as File
-        const bytes = await file.arrayBuffer()
-        const buffer = Buffer.from(bytes)
-
+        
         // Generate unique filename
         const timestamp = Date.now()
         const randomString = Math.random().toString(36).substring(2, 15)
-        const fileExtension = path.extname(file.name)
-        const fileName = `${timestamp}-${randomString}${fileExtension}`
-        const filePath = path.join(uploadsDir, fileName)
-        const fileUrl = `/uploads/medical-records/${fileName}`
+        const fileExtension = file.name.split('.').pop() || ''
+        const fileName = `${timestamp}-${randomString}.${fileExtension}`
 
-        // Write file to disk
-        await writeFile(filePath, buffer)
+        if (isProduction) {
+          // Use Vercel Blob in production
+          const { put } = await import('@vercel/blob')
+          const blob = await put(fileName, file, {
+            access: 'public',
+            addRandomSuffix: false
+          })
 
-        files.push({
-          fileName,
-          originalName: file.name,
-          mimeType: file.type,
-          size: file.size,
-          filePath,
-          fileUrl
-        })
+          files.push({
+            fileName,
+            originalName: file.name,
+            mimeType: file.type,
+            size: file.size,
+            fileUrl: blob.url
+          })
+        } else {
+          // Use local file system in development
+          const { writeFile, mkdir } = await import('fs/promises')
+          const { existsSync } = await import('fs')
+          const path = await import('path')
+
+          const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'medical-records')
+          if (!existsSync(uploadsDir)) {
+            await mkdir(uploadsDir, { recursive: true })
+          }
+
+          const bytes = await file.arrayBuffer()
+          const buffer = Buffer.from(bytes)
+          const filePath = path.join(uploadsDir, fileName)
+          const fileUrl = `/uploads/medical-records/${fileName}`
+
+          await writeFile(filePath, buffer)
+
+          files.push({
+            fileName,
+            originalName: file.name,
+            mimeType: file.type,
+            size: file.size,
+            fileUrl
+          })
+        }
       } else {
         // Handle form fields
         fields[key] = value.toString()
@@ -62,7 +80,7 @@ export async function handleFileUpload(request: NextRequest): Promise<{
     return { files, fields }
   } catch (error) {
     console.error('File upload error:', error)
-    throw new Error('Failed to process file upload')
+    throw new Error('Failed to process file upload: ' + (error instanceof Error ? error.message : 'Unknown error'))
   }
 }
 
