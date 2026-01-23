@@ -24,6 +24,14 @@ enum AccessGrantStatus {
   REVOKED
 }
 
+enum RecordType {
+  LAB_RESULTS
+  PRESCRIPTION
+  IMAGING
+  CONSULTATION
+  OTHER
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -36,6 +44,9 @@ model User {
   // Relations for access grants
   grantedAccess AccessGrant[] @relation("PatientGrants")
   receivedAccess AccessGrant[] @relation("DoctorGrants")
+  
+  // Relations for medical records
+  medicalRecords MedicalRecord[]
 
   @@map("users")
 }
@@ -57,4 +68,24 @@ model AccessGrant {
 
   @@unique([patientId, doctorId], name: "patientId_doctorId")
   @@map("access_grants")
+}
+
+model MedicalRecord {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  recordType  RecordType
+  fileName    String
+  fileUrl     String
+  fileSize    Int
+  mimeType    String
+  patientId   String
+  uploadedAt  DateTime   @default(now())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  patient User @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@map("medical_records")
 }

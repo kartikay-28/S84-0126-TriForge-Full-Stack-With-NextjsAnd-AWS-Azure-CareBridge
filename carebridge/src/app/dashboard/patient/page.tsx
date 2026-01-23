@@ -23,6 +23,8 @@ export default function PatientDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [doctorEmail, setDoctorEmail] = useState('')
   const [mounted, setMounted] = useState(false)
+  const [records, setRecords] = useState<any[]>([])
+  const [recordsLoading, setRecordsLoading] = useState(false)
   const router = useRouter()
 
   // File upload hook
@@ -44,6 +46,9 @@ export default function PatientDashboard() {
     }
 
     setUser({ name: userName || 'Patient', role: userRole })
+
+    // Fetch records when user is set
+    fetchRecords()
   }, [router])
 
   const handleLogout = () => {
@@ -60,11 +65,47 @@ export default function PatientDashboard() {
     setShowGrantAccessModal(false)
   }
 
+  const fetchRecords = async () => {
+    setRecordsLoading(true)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        console.error('No token found')
+        return
+      }
+
+      const response = await fetch('/api/patient/records', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setRecords(data.records || [])
+      } else {
+        console.error('Failed to fetch records:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Error fetching records:', error)
+    } finally {
+      setRecordsLoading(false)
+    }
+  }
+
   const handleUploadRecord = async (file: File, metadata: { title: string; description: string; recordType: string }) => {
     try {
-      await uploadFile(file, metadata)
+      const result = await uploadFile(file, metadata)
       setShowUploadModal(false)
-      // TODO: Refresh records list
+
+      // Add the new record to the local state immediately
+      if (result.record) {
+        setRecords(prev => [result.record, ...prev])
+      }
+
+      // Also refresh the records from server to ensure consistency
+      await fetchRecords()
+
       alert('Medical record uploaded successfully!')
     } catch (error) {
       console.error('Upload failed:', error)
@@ -326,7 +367,10 @@ export default function PatientDashboard() {
                     </div>
                     <h3 className="font-semibold text-white">Medical Records</h3>
                   </div>
-                  <p className="text-slate-400 text-sm mb-4">Total records stored</p>
+                  <div className="mb-4">
+                    <div className="text-2xl font-bold text-white mb-1">{records.length}</div>
+                    <p className="text-slate-400 text-sm">Total records stored</p>
+                  </div>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -414,7 +458,7 @@ export default function PatientDashboard() {
                 {/* Records */}
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-semibold text-white">View All</h3>
+                    <h3 className="font-semibold text-white">Recent Records</h3>
                     <button
                       onClick={() => setActiveTab('records')}
                       className="text-emerald-400 text-sm hover:text-emerald-300"
@@ -423,15 +467,57 @@ export default function PatientDashboard() {
                     </button>
                   </div>
 
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
+                  {records.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <h4 className="font-medium text-white mb-2">No records yet</h4>
+                      <p className="text-slate-400 text-sm">Your medical records will appear here</p>
                     </div>
-                    <h4 className="font-medium text-white mb-2">No records yet</h4>
-                    <p className="text-slate-400 text-sm">Your medical records will appear here</p>
-                  </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {records.slice(0, 3).map((record, index) => (
+                        <div key={record.id || index} className="flex items-center gap-3 p-3 bg-slate-900/60 rounded-lg hover:bg-slate-900/80 transition-colors">
+                          <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                            <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white text-sm truncate">{record.title}</p>
+                            <p className="text-slate-400 text-xs">
+                              {record.recordType?.replace('_', ' ') || 'Unknown Type'} • {
+                                record.uploadedAt
+                                  ? new Date(record.uploadedAt).toLocaleDateString()
+                                  : 'Recently uploaded'
+                              }
+                            </p>
+                          </div>
+                          {record.fileUrl && (
+                            <a
+                              href={record.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-emerald-400 hover:text-emerald-300 text-xs"
+                            >
+                              View
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                      {records.length > 3 && (
+                        <button
+                          onClick={() => setActiveTab('records')}
+                          className="w-full text-center py-2 text-emerald-400 hover:text-emerald-300 text-sm transition-colors"
+                        >
+                          View {records.length - 3} more records →
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </>
@@ -454,25 +540,98 @@ export default function PatientDashboard() {
                 </motion.button>
               </div>
 
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8 hover-lift">
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="w-20 h-20 bg-slate-700/50 rounded-full flex items-center justify-center mb-6">
-                    <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+              {recordsLoading ? (
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8 hover-lift">
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p className="text-slate-400">Loading your records...</p>
                   </div>
-                  <h3 className="text-xl font-semibold text-white mb-3">No medical records uploaded yet</h3>
-                  <p className="text-slate-400 mb-6 max-w-md">Upload your medical records to keep them secure and easily accessible to authorized healthcare providers.</p>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowUploadModal(true)}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-                  >
-                    Upload Your First Record
-                  </motion.button>
                 </div>
-              </div>
+              ) : records.length === 0 ? (
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8 hover-lift">
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-20 h-20 bg-slate-700/50 rounded-full flex items-center justify-center mb-6">
+                      <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-3">No medical records uploaded yet</h3>
+                    <p className="text-slate-400 mb-6 max-w-md">Upload your medical records to keep them secure and easily accessible to authorized healthcare providers.</p>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowUploadModal(true)}
+                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+                    >
+                      Upload Your First Record
+                    </motion.button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {records.map((record, index) => (
+                    <motion.div
+                      key={record.id || index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                            <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-white mb-1">{record.title}</h4>
+                            {record.description && (
+                              <p className="text-slate-400 text-sm mb-2">{record.description}</p>
+                            )}
+                            <div className="flex items-center gap-4 text-xs text-slate-500">
+                              <span className="bg-slate-700 px-2 py-1 rounded">
+                                {record.recordType?.replace('_', ' ') || 'Unknown Type'}
+                              </span>
+                              <span>{record.fileName}</span>
+                              {record.fileSize && (
+                                <span>{Math.round(record.fileSize / 1024)} KB</span>
+                              )}
+                              <span>
+                                {record.uploadedAt
+                                  ? new Date(record.uploadedAt).toLocaleDateString()
+                                  : 'Recently uploaded'
+                                }
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {record.fileUrl && (
+                            <motion.a
+                              href={record.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="px-3 py-1 bg-emerald-500 hover:bg-emerald-600 text-white text-sm rounded-lg transition-colors"
+                            >
+                              View
+                            </motion.a>
+                          )}
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors"
+                          >
+                            Share
+                          </motion.button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
