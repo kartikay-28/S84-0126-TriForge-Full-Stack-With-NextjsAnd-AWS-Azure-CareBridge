@@ -10,13 +10,16 @@ interface UploadMetadata {
 
 interface UseFileUploadReturn {
     uploadFile: (file: File, metadata: UploadMetadata) => Promise<any>
+    deleteFile: (recordId: string) => Promise<void>
     isUploading: boolean
+    isDeleting: boolean
     error: string | null
     success: boolean
 }
 
 export function useFileUpload(): UseFileUploadReturn {
     const [isUploading, setIsUploading] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
 
@@ -64,9 +67,44 @@ export function useFileUpload(): UseFileUploadReturn {
         }
     }
 
+    const deleteFile = async (recordId: string) => {
+        setIsDeleting(true)
+        setError(null)
+
+        try {
+            const token = localStorage.getItem('token')
+            if (!token) {
+                throw new Error('No authentication token found')
+            }
+
+            const response = await fetch(`/api/patient/records/${recordId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+
+            const result = await response.json()
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Delete failed')
+            }
+
+            return result
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Delete failed'
+            setError(errorMessage)
+            throw err
+        } finally {
+            setIsDeleting(false)
+        }
+    }
+
     return {
         uploadFile,
+        deleteFile,
         isUploading,
+        isDeleting,
         error,
         success
     }
