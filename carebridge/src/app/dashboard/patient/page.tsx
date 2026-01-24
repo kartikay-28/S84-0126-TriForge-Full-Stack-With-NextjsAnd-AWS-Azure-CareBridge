@@ -28,7 +28,7 @@ export default function PatientDashboard() {
   const router = useRouter()
 
   // File upload hook
-  const { uploadFile, isUploading, error: uploadError } = useFileUpload()
+  const { uploadFile, deleteFile, isUploading, isDeleting, error: uploadError } = useFileUpload()
 
   useEffect(() => {
     setMounted(true)
@@ -63,6 +63,27 @@ export default function PatientDashboard() {
     console.log('Granting access to:', doctorEmail)
     setDoctorEmail('')
     setShowGrantAccessModal(false)
+  }
+
+  const handleDeleteRecord = async (recordId: string, recordTitle: string) => {
+    if (!confirm(`Are you sure you want to delete "${recordTitle}"? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      await deleteFile(recordId)
+
+      // Remove the record from local state
+      setRecords(prev => prev.filter(record => record.id !== recordId))
+
+      // Also refresh from server to ensure consistency
+      await fetchRecords()
+
+      alert('Medical record deleted successfully!')
+    } catch (error) {
+      console.error('Delete failed:', error)
+      alert('Delete failed: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    }
   }
 
   const fetchRecords = async () => {
@@ -625,6 +646,15 @@ export default function PatientDashboard() {
                             className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors"
                           >
                             Share
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleDeleteRecord(record.id, record.title)}
+                            disabled={isDeleting}
+                            className="px-3 py-1 bg-red-500 hover:bg-red-600 disabled:bg-red-300 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors"
+                          >
+                            {isDeleting ? 'Deleting...' : 'Delete'}
                           </motion.button>
                         </div>
                       </div>
