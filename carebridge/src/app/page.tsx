@@ -1,30 +1,33 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import ThemeToggle from '@/components/ThemeToggle'
+import LampToggle from '@/components/LampToggle'
 import Logo from '@/components/Logo'
 
 export default function Home() {
   return (
-    <div className="min-h-screen text-slate-900 dark:text-white transition-colors duration-300" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
+    <div className="min-h-screen text-slate-900 dark:text-white transition-colors duration-300 page-transition animate-fade-in" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
       {/* Navigation */}
-      <nav className="nav-clean sticky top-0 z-50">
+      <nav className="nav-clean sticky top-0 z-50 animate-slide-in-up">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <motion.div 
+          <div className="flex justify-between items-center h-12">
+            <motion.a
+              href="/"
               whileHover={{ scale: 1.02 }}
-              className="flex items-center gap-3"
+              className="flex items-center gap-3 hover-glow cursor-pointer"
             >
               <Logo size="lg" />
-              <span className="text-2xl font-bold">CareBridge</span>
-            </motion.div>
+              <span className="text-2xl font-bold text-gradient">CareBridge</span>
+            </motion.a>
             
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
+            <div className="flex items-center gap-4 h-full">
+              <div className="flex items-center h-full">
+                <LampToggle />
+              </div>
               <motion.a
                 href="/auth/login"
                 whileHover={{ scale: 1.02 }}
-                className="hover:text-emerald-500 transition font-medium px-4 py-2"
+                className="hover:text-emerald-500 transition font-medium px-4 py-2 hover-glow micro-bounce"
                 style={{ color: 'var(--text-secondary)' }}
               >
                 Sign In
@@ -33,7 +36,7 @@ export default function Home() {
                 href="/auth/signup"
                 whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.98 }}
-                className="btn-primary"
+                className="btn-primary hover-glow micro-bounce"
               >
                 Get Started →
               </motion.a>
@@ -51,16 +54,16 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="max-w-2xl"
+              className="max-w-2xl animate-slide-in-left"
             >
-              <div className="inline-flex items-center gap-3 clean-card px-4 py-2 mb-8">
+              <div className="inline-flex items-center gap-3 clean-card px-4 py-2 mb-8 hover-glow animate-bounce">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                 <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Privacy-First Healthcare</span>
               </div>
 
-              <h1 className="heading-xl mb-6">
+              <h1 className="heading-xl mb-6 animate-fade-in">
                 Your Health Records, 
-                <span className="text-emerald-500"> Unified & Secure</span>
+                <span className="text-emerald-500 text-gradient animate-pulse"> Unified & Secure</span>
               </h1>
 
               <p className="text-xl mb-10 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
@@ -69,33 +72,33 @@ export default function Home() {
                 your health data.
               </p>
 
-              <div className="flex items-center gap-4 mb-12">
+              <div className="flex items-center gap-4 mb-12 animate-stagger-1">
                 <motion.a
                   href="/auth/signup"
                   whileHover={{ scale: 1.02, y: -1 }}
                   whileTap={{ scale: 0.98 }}
-                  className="btn-primary text-lg px-8 py-4"
+                  className="btn-primary text-lg px-8 py-4 hover-glow micro-bounce"
                 >
                   Start for Free
                 </motion.a>
                 <motion.a
                   href="/auth/login"
                   whileHover={{ scale: 1.02 }}
-                  className="btn-secondary text-lg px-8 py-4"
+                  className="btn-secondary text-lg px-8 py-4 hover-glow micro-bounce"
                 >
                   Sign In
                 </motion.a>
               </div>
 
-              <div className="flex items-center gap-8 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+              <div className="flex items-center gap-8 text-sm animate-stagger-2">
+                <div className="flex items-center gap-2 hover-scale">
+                  <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center animate-pulse">
                     <span className="text-xs text-white font-bold">✓</span>
                   </div>
                   <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>HIPAA Compliant</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                <div className="flex items-center gap-2 hover-scale">
+                  <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center animate-pulse">
                     <span className="text-xs text-white font-bold">✓</span>
                   </div>
                   <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>End-to-End Encrypted</span>
@@ -108,12 +111,12 @@ export default function Home() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="lg:ml-16"
+              className="lg:ml-16 animate-slide-in-right"
             >
-              <div className="clean-card p-8 hover-lift">
+              <div className="clean-card p-8 hover-lift hover-glow card-entrance">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="heading-md">Health Dashboard</h3>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 animate-pulse">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                     <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Live</span>
                   </div>
@@ -128,10 +131,10 @@ export default function Home() {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 + index * 0.1 }}
-                      className="flex justify-between items-center p-4 glass-surface rounded-xl"
+                      className="flex justify-between items-center p-4 glass-surface rounded-xl hover-glow hover-scale"
                     >
                       <span className="text-sm font-medium">{item}</span>
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                     </motion.div>
                   ))}
                 </div>
@@ -144,7 +147,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
+            viewport={{ once: false, amount: 0.3 }}
             className="mb-32"
           >
             <div className="text-center mb-16">
@@ -182,7 +185,7 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: false, amount: 0.5 }}
                   className="clean-card p-8 hover-lift text-center"
                 >
                   <div className="flex items-center justify-center gap-4 mb-6">
@@ -203,7 +206,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
+            viewport={{ once: false, amount: 0.3 }}
             className="mb-32"
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -236,7 +239,7 @@ export default function Home() {
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.6, delay: index * 0.1 }}
-                      viewport={{ once: true }}
+                      viewport={{ once: false, amount: 0.5 }}
                       className="flex items-start gap-4"
                     >
                       <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center mt-1 flex-shrink-0">
@@ -256,7 +259,7 @@ export default function Home() {
                 initial={{ opacity: 0, x: 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                viewport={{ once: true }}
+                viewport={{ once: false, amount: 0.3 }}
                 className="lg:ml-16"
               >
                 <div className="clean-card p-8">
@@ -276,7 +279,7 @@ export default function Home() {
                         initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: index * 0.1 }}
-                        viewport={{ once: true }}
+                        viewport={{ once: false, amount: 0.5 }}
                         className="flex items-center justify-between p-4 glass-surface rounded-xl"
                       >
                         <div className="flex items-center gap-3">
@@ -302,7 +305,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
+            viewport={{ once: false, amount: 0.3 }}
             className="text-center"
           >
             <div className="clean-card p-16 max-w-4xl mx-auto">

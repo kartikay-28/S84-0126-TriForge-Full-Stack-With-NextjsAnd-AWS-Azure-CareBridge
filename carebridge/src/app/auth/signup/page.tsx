@@ -100,13 +100,14 @@ export default function SignupPage() {
               className="space-y-8"
             >
               {/* Logo */}
-              <motion.div 
+              <motion.a
+                href="/"
                 whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-3"
+                className="flex items-center gap-3 hover-glow cursor-pointer"
               >
                 <Logo size="lg" />
                 <span className="text-2xl font-bold">CareBridge</span>
-              </motion.div>
+              </motion.a>
 
               <div className="space-y-6">
                 <motion.h1 

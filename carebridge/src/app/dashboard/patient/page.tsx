@@ -143,15 +143,19 @@ export default function PatientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex dashboard-container" style={{ position: 'relative', overflow: 'visible' }}>
+    <div className="min-h-screen bg-slate-900 text-white flex dashboard-container page-transition" style={{ position: 'relative', overflow: 'visible' }}>
       {/* Sidebar */}
-      <div className="w-64 bg-slate-800/50 border-r border-slate-700/50 flex flex-col">
+      <div className="w-64 bg-slate-800/50 border-r border-slate-700/50 flex flex-col sidebar animate-slide-in-left">
         {/* Logo */}
         <div className="p-6 border-b border-slate-700/50">
-          <div className="flex items-center gap-3">
+          <motion.a
+            href="/"
+            whileHover={{ scale: 1.02 }}
+            className="flex items-center gap-3 hover-glow cursor-pointer"
+          >
             <Logo size="md" />
             <span className="text-xl font-bold">CareBridge</span>
-          </div>
+          </motion.a>
         </div>
 
         {/* Navigation */}
@@ -228,7 +232,7 @@ export default function PatientDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col main-content animate-slide-in-right">
         {/* Header */}
         <header className="p-6 border-b border-slate-700/50 relative" style={{ zIndex: 1000 }}>
           <div className="flex items-center justify-between">
@@ -336,36 +340,36 @@ export default function PatientDashboard() {
           {activeTab === 'dashboard' && (
             <>
               {/* Health Metrics */}
-              <div className="mb-8">
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift">
+              <div className="mb-8 animate-fade-in">
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift card-entrance">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center animate-pulse">
                       <span className="text-emerald-400">💚</span>
                     </div>
                     <h3 className="text-lg font-semibold text-white">Your latest health metrics</h3>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-slate-900/60 rounded-lg p-4 hover-lift">
+                    <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-1">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-slate-400">Blood Pressure</span>
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                       </div>
                       <p className="text-lg font-semibold text-white">Normal</p>
                     </div>
 
-                    <div className="bg-slate-900/60 rounded-lg p-4 hover-lift">
+                    <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-2">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-slate-400">Heart Rate</span>
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                       </div>
                       <p className="text-lg font-semibold text-white">Normal</p>
                     </div>
 
-                    <div className="bg-slate-900/60 rounded-lg p-4 hover-lift">
+                    <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-3">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-slate-400">Last Checkup</span>
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                       </div>
                       <p className="text-lg font-semibold text-white">2024</p>
                     </div>

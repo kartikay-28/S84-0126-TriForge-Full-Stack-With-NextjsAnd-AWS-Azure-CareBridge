@@ -80,10 +80,14 @@ export default function DoctorDashboard() {
       <div className="w-64 glass-surface border-r flex flex-col" style={{ borderColor: 'var(--border-light)' }}>
         {/* Logo */}
         <div className="p-6 border-b" style={{ borderColor: 'var(--border-light)' }}>
-          <div className="flex items-center gap-3">
+          <motion.a
+            href="/"
+            whileHover={{ scale: 1.02 }}
+            className="flex items-center gap-3 hover-glow cursor-pointer"
+          >
             <Logo size="md" />
             <span className="text-xl font-bold">CareBridge</span>
-          </div>
+          </motion.a>
         </div>
 
         {/* Navigation */}
