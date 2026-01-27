@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import * as Dialog from '@radix-ui/react-dialog'
 import { createPortal } from 'react-dom'
-import ThemeToggle from '@/components/ThemeToggle'
+import LampToggle from '@/components/LampToggle'
 import Logo from '@/components/Logo'
 import FileUpload from '@/components/FileUpload'
 import { useFileUpload } from '@/hooks/useFileUpload'
@@ -241,7 +241,9 @@ export default function PatientDashboard() {
               <p className="text-slate-400">Manage your health records and control who can access them</p>
             </div>
             <div className="flex items-center gap-4">
-              <ThemeToggle />
+              <div className="flex items-center h-12">
+                <LampToggle />
+              </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import * as Dialog from '@radix-ui/react-dialog'
 import { createPortal } from 'react-dom'
-import ThemeToggle from '@/components/ThemeToggle'
+import LampToggle from '@/components/LampToggle'
 import Logo from '@/components/Logo'
 
 interface User {
@@ -191,7 +191,9 @@ export default function DoctorDashboard() {
               <p className="text-slate-400">Here's an overview of your patients and recent activity</p>
             </div>
             <div className="flex items-center gap-4">
-              <ThemeToggle />
+              <div className="flex items-center h-12">
+                <LampToggle />
+              </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

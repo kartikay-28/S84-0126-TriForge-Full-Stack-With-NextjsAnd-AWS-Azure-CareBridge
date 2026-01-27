@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import * as Toast from '@radix-ui/react-toast'
 import AuthFlipWrapper from '../AuthFlipWrapper'
-import ThemeToggle from '@/components/ThemeToggle'
+import LampToggle from '@/components/LampToggle'
 import Logo from '@/components/Logo'
 
 // Validation schema
@@ -91,7 +91,7 @@ export default function LoginPage() {
         >
           {/* Theme Toggle - Fixed Position */}
           <div className="fixed top-6 right-6 z-50">
-            <ThemeToggle />
+            <LampToggle />
           </div>
           
           <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-16 items-center">
