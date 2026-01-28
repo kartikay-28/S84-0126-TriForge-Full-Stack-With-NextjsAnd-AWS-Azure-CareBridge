@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import { useProfile } from '@/hooks/useProfile'
+import { useDashboard } from '@/hooks/useDashboard'
 import LampToggle from '@/components/LampToggle'
 
 
@@ -28,8 +30,8 @@ interface ProfileData {
     relationship: string
   }
   lifestyle?: {
-    smoking: boolean
-    drinking: boolean
+    smoking: string
+    drinking: string
     exercise: string
   }
   
@@ -45,6 +47,10 @@ export default function PatientProfile() {
   const [completionPercentage, setCompletionPercentage] = useState(0)
   const router = useRouter()
 
+  // Profile hooks
+  const { updateBasicProfile, updateRecommendedProfile, updateAdvancedProfile, isLoading, error } = useProfile()
+  const { dashboardData, refetch } = useDashboard()
+
   useEffect(() => {
     const token = localStorage.getItem('token')
     const userName = localStorage.getItem('userName')
@@ -56,36 +62,13 @@ export default function PatientProfile() {
     }
 
     setUser({ name: userName || 'Patient', role: userRole })
-    calculateCompletion()
-  }, [router, profileData])
+  }, [router])
 
-  const calculateCompletion = () => {
-    let completed = 0
-    let total = 0
-
-    // Level 1 fields (weight: 40%)
-    const level1Fields = ['age', 'gender', 'primaryProblem', 'symptoms', 'consultationPreference']
-    level1Fields.forEach(field => {
-      total += 8 // 40% / 5 fields
-      if (profileData[field as keyof ProfileData]) completed += 8
-    })
-
-    // Level 2 fields (weight: 35%)
-    const level2Fields = ['medicalHistory', 'currentMedications', 'emergencyContact', 'lifestyle']
-    level2Fields.forEach(field => {
-      total += 8.75 // 35% / 4 fields
-      if (profileData[field as keyof ProfileData]) completed += 8.75
-    })
-
-    // Level 3 fields (weight: 25%)
-    const level3Fields = ['healthMetrics', 'medicalReports']
-    level3Fields.forEach(field => {
-      total += 12.5 // 25% / 2 fields
-      if (profileData[field as keyof ProfileData]) completed += 12.5
-    })
-
-    setCompletionPercentage(Math.round(completed))
-  }
+  useEffect(() => {
+    if (dashboardData) {
+      setCompletionPercentage(Math.round((dashboardData.profileLevel / 3) * 100))
+    }
+  }, [dashboardData])
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -99,6 +82,59 @@ export default function PatientProfile() {
       ...prev,
       [field]: value
     }))
+  }
+
+  const handleSaveBasic = async () => {
+    try {
+      const basicData = {
+        age: profileData.age,
+        gender: profileData.gender,
+        primaryProblem: profileData.primaryProblem,
+        symptoms: profileData.symptoms || [],
+        consultationPreference: profileData.consultationPreference
+      }
+
+      await updateBasicProfile(basicData)
+      await refetch() // Refresh dashboard data
+      alert('Basic profile saved successfully!')
+    } catch (error) {
+      console.error('Failed to save basic profile:', error)
+      alert('Failed to save profile. Please try again.')
+    }
+  }
+
+  const handleSaveRecommended = async () => {
+    try {
+      const recommendedData = {
+        medicalHistory: profileData.medicalHistory ? [profileData.medicalHistory] : [],
+        currentMedications: profileData.currentMedications || [],
+        emergencyContactName: profileData.emergencyContact?.name,
+        emergencyContactPhone: profileData.emergencyContact?.phone
+      }
+
+      await updateRecommendedProfile(recommendedData)
+      await refetch() // Refresh dashboard data
+      alert('Medical details saved successfully!')
+    } catch (error) {
+      console.error('Failed to save recommended profile:', error)
+      alert('Failed to save profile. Please try again.')
+    }
+  }
+
+  const handleSaveAdvanced = async () => {
+    try {
+      const advancedData = {
+        healthMetrics: profileData.healthMetrics,
+        medicalReports: profileData.medicalReports
+      }
+
+      await updateAdvancedProfile(advancedData)
+      await refetch() // Refresh dashboard data
+      alert('Advanced data saved successfully!')
+    } catch (error) {
+      console.error('Failed to save advanced profile:', error)
+      alert('Failed to save profile. Please try again.')
+    }
   }
 
   if (!user) {
@@ -144,6 +180,13 @@ export default function PatientProfile() {
       </header>
 
       <div className="p-6">
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p className="text-red-300 text-sm">{error}</p>
+          </div>
+        )}
+
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
@@ -235,10 +278,10 @@ export default function PatientProfile() {
                     className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   >
                     <option value="">Select gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                    <option value="prefer-not-to-say">Prefer not to say</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                    <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
                   </select>
                 </div>
 
@@ -256,25 +299,45 @@ export default function PatientProfile() {
                   />
                 </div>
 
+                {/* Symptoms */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Current Symptoms <span className="text-red-400">*</span>
+                  </label>
+                  <textarea
+                    value={profileData.symptoms?.join(', ') || ''}
+                    onChange={(e) => updateProfileData('symptoms', e.target.value.split(', ').filter(s => s.trim()))}
+                    rows={3}
+                    className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    placeholder="e.g., Headaches, Fatigue, Chest pain (separate with commas, max 3)"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">List up to 3 symptoms, separated by commas</p>
+                </div>
+
                 {/* Consultation Preference */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-slate-300 mb-2">
                     Consultation Preference <span className="text-red-400">*</span>
                   </label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {['In-person', 'Video call', 'Phone call'].map((option) => (
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    {[
+                      { value: 'IN_PERSON', label: 'In-person' },
+                      { value: 'VIDEO_CALL', label: 'Video call' },
+                      { value: 'PHONE_CALL', label: 'Phone call' },
+                      { value: 'CHAT', label: 'Chat/Messaging' }
+                    ].map((option) => (
                       <motion.button
-                        key={option}
+                        key={option.value}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => updateProfileData('consultationPreference', option)}
+                        onClick={() => updateProfileData('consultationPreference', option.value)}
                         className={`p-3 rounded-lg border transition-all ${
-                          profileData.consultationPreference === option
+                          profileData.consultationPreference === option.value
                             ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
                             : 'bg-slate-900 border-slate-600 text-slate-300 hover:border-slate-500'
                         }`}
                       >
-                        {option}
+                        {option.label}
                       </motion.button>
                     ))}
                   </div>
@@ -289,9 +352,11 @@ export default function PatientProfile() {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors"
+                    onClick={handleSaveBasic}
+                    disabled={isLoading}
+                    className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                   >
-                    Save Essential Info
+                    {isLoading ? 'Saving...' : 'Save Essential Info'}
                   </motion.button>
                 </div>
               </div>
@@ -332,6 +397,20 @@ export default function PatientProfile() {
                   />
                 </div>
 
+                {/* Current Medications */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Current Medications
+                  </label>
+                  <textarea
+                    value={profileData.currentMedications?.join(', ') || ''}
+                    onChange={(e) => updateProfileData('currentMedications', e.target.value.split(', ').filter(m => m.trim()))}
+                    rows={3}
+                    className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                    placeholder="e.g., Metformin 500mg, Lisinopril 10mg, Aspirin 81mg (separate with commas)"
+                  />
+                </div>
+
                 {/* Emergency Contact */}
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -340,15 +419,32 @@ export default function PatientProfile() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <input
                       type="text"
+                      value={profileData.emergencyContact?.name || ''}
+                      onChange={(e) => updateProfileData('emergencyContact', {
+                        ...profileData.emergencyContact,
+                        name: e.target.value
+                      })}
                       placeholder="Full name"
                       className="px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                     />
                     <input
                       type="tel"
+                      value={profileData.emergencyContact?.phone || ''}
+                      onChange={(e) => updateProfileData('emergencyContact', {
+                        ...profileData.emergencyContact,
+                        phone: e.target.value
+                      })}
                       placeholder="Phone number"
                       className="px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                     />
-                    <select className="px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
+                    <select 
+                      value={profileData.emergencyContact?.relationship || ''}
+                      onChange={(e) => updateProfileData('emergencyContact', {
+                        ...profileData.emergencyContact,
+                        relationship: e.target.value
+                      })}
+                      className="px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                    >
                       <option value="">Relationship</option>
                       <option value="spouse">Spouse</option>
                       <option value="parent">Parent</option>
@@ -372,7 +468,15 @@ export default function PatientProfile() {
                         {['Yes', 'No', 'Occasionally'].map((option) => (
                           <button
                             key={option}
-                            className="px-3 py-2 text-sm bg-slate-900 border border-slate-600 rounded-lg text-slate-300 hover:border-slate-500 transition-colors"
+                            onClick={() => updateProfileData('lifestyle', {
+                              ...profileData.lifestyle,
+                              smoking: option
+                            })}
+                            className={`px-3 py-2 text-sm border rounded-lg transition-colors ${
+                              profileData.lifestyle?.smoking === option
+                                ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
+                                : 'bg-slate-900 border-slate-600 text-slate-300 hover:border-slate-500'
+                            }`}
                           >
                             {option}
                           </button>
@@ -385,7 +489,15 @@ export default function PatientProfile() {
                         {['Yes', 'No', 'Socially'].map((option) => (
                           <button
                             key={option}
-                            className="px-3 py-2 text-sm bg-slate-900 border border-slate-600 rounded-lg text-slate-300 hover:border-slate-500 transition-colors"
+                            onClick={() => updateProfileData('lifestyle', {
+                              ...profileData.lifestyle,
+                              drinking: option
+                            })}
+                            className={`px-3 py-2 text-sm border rounded-lg transition-colors ${
+                              profileData.lifestyle?.drinking === option
+                                ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
+                                : 'bg-slate-900 border-slate-600 text-slate-300 hover:border-slate-500'
+                            }`}
                           >
                             {option}
                           </button>
@@ -394,7 +506,14 @@ export default function PatientProfile() {
                     </div>
                     <div className="space-y-2">
                       <span className="text-sm text-slate-400">Exercise</span>
-                      <select className="w-full px-3 py-2 text-sm bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                      <select 
+                        value={profileData.lifestyle?.exercise || ''}
+                        onChange={(e) => updateProfileData('lifestyle', {
+                          ...profileData.lifestyle,
+                          exercise: e.target.value
+                        })}
+                        className="w-full px-3 py-2 text-sm bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      >
                         <option value="">Select frequency</option>
                         <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
@@ -419,9 +538,11 @@ export default function PatientProfile() {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg transition-colors"
+                      onClick={handleSaveRecommended}
+                      disabled={isLoading}
+                      className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                     >
-                      Save Details
+                      {isLoading ? 'Saving...' : 'Save Details'}
                     </motion.button>
                   </div>
                 </div>
@@ -494,9 +615,11 @@ export default function PatientProfile() {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
+                    onClick={handleSaveAdvanced}
+                    disabled={isLoading}
+                    className="px-6 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                   >
-                    Save Advanced Data
+                    {isLoading ? 'Saving...' : 'Save Advanced Data'}
                   </motion.button>
                 </div>
               </div>

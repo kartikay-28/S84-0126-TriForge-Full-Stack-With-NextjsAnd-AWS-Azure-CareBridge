@@ -1,33 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from '@/lib/jwt'
+import { requireProfileLevel, handleMiddlewareError } from '@/lib/middleware'
 import { handleFileUpload, validateFileType, validateFileSize } from '@/lib/file-upload'
 import { prisma } from '@/lib/prisma'
 
-// GET /api/patient/records - Get all medical records for the patient
+// GET /api/patient/records - Get all medical records for the patient (requires level 1)
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Authorization token required' },
-        { status: 401 }
-      )
-    }
+    // Require profile level 1 to access medical records
+    const user = await requireProfileLevel(1)(request)
 
-    const token = authHeader.substring(7)
-    
-    let payload
-    try {
-      payload = verifyToken(token)
-    } catch (error) {
-      console.error('Token verification failed:', error)
-      return NextResponse.json(
-        { error: 'Invalid or expired token. Please login again.' },
-        { status: 401 }
-      )
-    }
-
-    if (payload.role !== 'PATIENT') {
+    if (user.role !== 'PATIENT') {
       return NextResponse.json(
         { error: 'Access denied. Patient role required.' },
         { status: 403 }
@@ -37,7 +19,7 @@ export async function GET(request: NextRequest) {
     // Get records from database
     const records = await prisma.medicalRecord.findMany({
       where: {
-        patientId: payload.userId
+        patientId: user.userId
       },
       orderBy: {
         uploadedAt: 'desc'
@@ -50,38 +32,17 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Get records error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return handleMiddlewareError(error)
   }
 }
 
-// POST /api/patient/records - Upload a new medical record with file
+// POST /api/patient/records - Upload a new medical record with file (requires level 1)
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Authorization token required' },
-        { status: 401 }
-      )
-    }
+    // Require profile level 1 to upload records (basic info completed)
+    const user = await requireProfileLevel(1)(request)
 
-    const token = authHeader.substring(7)
-    
-    let payload
-    try {
-      payload = verifyToken(token)
-    } catch (error) {
-      console.error('Token verification failed:', error)
-      return NextResponse.json(
-        { error: 'Invalid or expired token. Please login again.' },
-        { status: 401 }
-      )
-    }
-
-    if (payload.role !== 'PATIENT') {
+    if (user.role !== 'PATIENT') {
       return NextResponse.json(
         { error: 'Access denied. Patient role required.' },
         { status: 403 }
@@ -143,7 +104,7 @@ export async function POST(request: NextRequest) {
         fileUrl: uploadedFile.fileUrl,
         fileSize: uploadedFile.size,
         mimeType: uploadedFile.mimeType,
-        patientId: payload.userId
+        patientId: user.userId
       }
     })
 
@@ -156,9 +117,6 @@ export async function POST(request: NextRequest) {
     )
   } catch (error) {
     console.error('Upload record error:', error)
-    return NextResponse.json(
-      { error: 'Failed to upload medical record' },
-      { status: 500 }
-    )
+    return handleMiddlewareError(error)
   }
 }

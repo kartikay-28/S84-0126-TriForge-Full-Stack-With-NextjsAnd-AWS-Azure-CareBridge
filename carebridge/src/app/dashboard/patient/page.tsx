@@ -9,6 +9,9 @@ import LampToggle from '@/components/LampToggle'
 import Logo from '@/components/Logo'
 import FileUpload from '@/components/FileUpload'
 import { useFileUpload } from '@/hooks/useFileUpload'
+import { useDashboard } from '@/hooks/useDashboard'
+import ProfileProgress from '@/components/ProfileProgress'
+import SectionLock from '@/components/SectionLock'
 
 interface User {
   name: string
@@ -30,6 +33,9 @@ export default function PatientDashboard() {
   // File upload hook
   const { uploadFile, deleteFile, isUploading, isDeleting, error: uploadError } = useFileUpload()
 
+  // Dashboard hook to get profile level and section visibility
+  const { dashboardData, isLoading: dashboardLoading } = useDashboard()
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -47,9 +53,16 @@ export default function PatientDashboard() {
 
     setUser({ name: userName || 'Patient', role: userRole })
 
-    // Fetch records when user is set
-    fetchRecords()
+    // Only fetch records if user has sufficient profile level
+    // We'll fetch records after dashboard data is loaded to check profile level
   }, [router])
+
+  // Fetch records only when dashboard data is available and user has profile level 1+
+  useEffect(() => {
+    if (dashboardData && dashboardData.profileLevel >= 1) {
+      fetchRecords()
+    }
+  }, [dashboardData])
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -104,11 +117,17 @@ export default function PatientDashboard() {
       if (response.ok) {
         const data = await response.json()
         setRecords(data.records || [])
+      } else if (response.status === 403) {
+        // Profile level not sufficient - this is expected for new users
+        console.log('Records access requires higher profile level')
+        setRecords([])
       } else {
         console.error('Failed to fetch records:', response.statusText)
+        setRecords([])
       }
     } catch (error) {
       console.error('Error fetching records:', error)
+      setRecords([])
     } finally {
       setRecordsLoading(false)
     }
@@ -116,6 +135,12 @@ export default function PatientDashboard() {
 
   const handleUploadRecord = async (file: File, metadata: { title: string; description: string; recordType: string }) => {
     try {
+      // Check if user has required profile level for uploading
+      if (dashboardData && dashboardData.profileLevel < 1) {
+        alert('Please complete your basic profile to upload medical records.')
+        return
+      }
+
       const result = await uploadFile(file, metadata)
       setShowUploadModal(false)
 
@@ -341,256 +366,307 @@ export default function PatientDashboard() {
         <main className="flex-1 p-6">
           {activeTab === 'dashboard' && (
             <>
-              {/* Profile Completion Card */}
-              <div className="mb-8 animate-fade-in">
-                <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-xl p-6 hover-lift card-entrance">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                        <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-white">Complete Your Profile</h3>
-                        <p className="text-slate-400 text-sm">Get better healthcare recommendations and doctor matching</p>
-                      </div>
+              {dashboardLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="ml-3 text-slate-400">Loading dashboard...</span>
+                </div>
+              ) : !dashboardData || dashboardData.profileLevel === 0 ? (
+                /* Profile Setup Required */
+                <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+                  <div className="w-24 h-24 bg-gradient-to-br from-emerald-500/20 to-blue-500/20 rounded-full flex items-center justify-center mb-6">
+                    <svg className="w-12 h-12 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-3xl font-bold text-white mb-4">Welcome to CareBridge!</h2>
+                  <p className="text-xl text-slate-300 mb-2">Please update your profile settings to get access to your full dashboard</p>
+                  <p className="text-slate-400 mb-8 max-w-md">Complete your basic information to unlock features like doctor matching, health metrics, and secure messaging.</p>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => router.push('/dashboard/patient/profile')}
+                    className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition-colors text-lg"
+                  >
+                    Complete Profile Setup
+                  </motion.button>
+
+                  <div className="mt-8 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                    <p className="text-sm text-slate-400">
+                      ✨ Takes less than 2 minutes • Unlock all dashboard features
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                /* Full Dashboard - Profile Level 1+ */
+                <>
+                  {/* Profile Progress Card - Only show if not fully complete */}
+                  {dashboardData.profileLevel < 3 && (
+                    <div className="mb-8 animate-fade-in">
+                      <ProfileProgress
+                        profileLevel={dashboardData.profileLevel}
+                        nextStep={dashboardData.nextRecommendedStep}
+                        onStartProfile={() => router.push('/dashboard/patient/profile')}
+                      />
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-emerald-400">20%</div>
-                        <div className="text-xs text-slate-400">Complete</div>
+                  )}
+
+                  {/* Health Metrics */}
+                  <div className="mb-8 animate-fade-in">
+                    {dashboardData?.sectionVisibility?.healthMetrics?.visible ? (
+                      <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift card-entrance">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center animate-pulse">
+                            <span className="text-emerald-400">💚</span>
+                          </div>
+                          <h3 className="text-lg font-semibold text-white">Your latest health metrics</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm text-slate-400">Blood Pressure</span>
+                              <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
+                            </div>
+                            <p className="text-lg font-semibold text-slate-400">No data</p>
+                          </div>
+
+                          <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-2">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm text-slate-400">Heart Rate</span>
+                              <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
+                            </div>
+                            <p className="text-lg font-semibold text-slate-400">No data</p>
+                          </div>
+
+                          <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm text-slate-400">Last Checkup</span>
+                              <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
+                            </div>
+                            <p className="text-lg font-semibold text-slate-400">No data</p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <SectionLock
+                        title="Health Metrics Locked"
+                        message={dashboardData?.sectionVisibility?.healthMetrics?.message || "Complete your basic profile to unlock health metrics tracking"}
+                        onUnlock={() => router.push('/dashboard/patient/profile')}
+                        icon={
+                          <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                        }
+                      />
+                    )}
+                  </div>
+
+                  {/* Cards Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    {/* Medical Records */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift"
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                          <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <h3 className="font-semibold text-white">Medical Records</h3>
+                      </div>
+                      <div className="mb-4">
+                        <div className="text-2xl font-bold text-white mb-1">{records.length}</div>
+                        <p className="text-slate-400 text-sm">Total records stored</p>
                       </div>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => router.push('/dashboard/patient/profile')}
-                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors"
+                        onClick={() => {
+                          if (dashboardData && dashboardData.profileLevel < 1) {
+                            alert('Please complete your basic profile to upload medical records.')
+                          } else {
+                            setShowUploadModal(true)
+                          }
+                        }}
+                        className={`w-full text-sm font-medium py-2 rounded-lg transition-colors ${dashboardData && dashboardData.profileLevel >= 1
+                          ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                          : 'bg-slate-600 hover:bg-slate-500 text-slate-300'
+                          }`}
                       >
-                        Complete Now
+                        {dashboardData && dashboardData.profileLevel >= 1 ? 'Upload Record' : 'Complete Basic Profile to Upload'}
                       </motion.button>
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <div className="w-full bg-slate-700 rounded-full h-2">
-                      <div className="bg-emerald-500 h-2 rounded-full w-1/5"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                    </motion.div>
 
-              {/* Health Metrics */}
-              <div className="mb-8 animate-fade-in">
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift card-entrance">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center animate-pulse">
-                      <span className="text-emerald-400">💚</span>
-                    </div>
-                    <h3 className="text-lg font-semibold text-white">Your latest health metrics</h3>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-slate-400">Blood Pressure</span>
-                        <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
-                      </div>
-                      <p className="text-lg font-semibold text-slate-400">No data</p>
-                    </div>
-
-                    <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-2">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-slate-400">Heart Rate</span>
-                        <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
-                      </div>
-                      <p className="text-lg font-semibold text-slate-400">No data</p>
-                    </div>
-
-                    <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-slate-400">Last Checkup</span>
-                        <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
-                      </div>
-                      <p className="text-lg font-semibold text-slate-400">No data</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                {/* Medical Records */}
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <h3 className="font-semibold text-white">Medical Records</h3>
-                  </div>
-                  <div className="mb-4">
-                    <div className="text-2xl font-bold text-white mb-1">{records.length}</div>
-                    <p className="text-slate-400 text-sm">Total records stored</p>
-                  </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowUploadModal(true)}
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium py-2 rounded-lg transition-colors"
-                  >
-                    Upload Record
-                  </motion.button>
-                </motion.div>
-
-                {/* Active Consents */}
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                      <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-                    </div>
-                    <h3 className="font-semibold text-white">Active Consents</h3>
-                  </div>
-                  <div className="mb-4">
-                    <div className="text-2xl font-bold text-white mb-1">0</div>
-                    <p className="text-slate-400 text-sm">Doctors with access</p>
-                  </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setActiveTab('access')}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 rounded-lg transition-colors"
-                  >
-                    Manage Access
-                  </motion.button>
-                </motion.div>
-
-                {/* Pending Requests */}
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-                      </svg>
-                    </div>
-                    <h3 className="font-semibold text-white">Pending Requests</h3>
-                  </div>
-                  <div className="mb-4">
-                    <div className="text-2xl font-bold text-white mb-1">0</div>
-                    <p className="text-slate-400 text-sm">Awaiting your approval</p>
-                  </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium py-2 rounded-lg transition-colors"
-                  >
-                    Review Requests
-                  </motion.button>
-                </motion.div>
-              </div>
-
-              {/* Bottom Sections */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Messages */}
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-semibold text-white">Messages</h3>
-                    <a href="#" className="text-emerald-400 text-sm hover:text-emerald-300">View All →</a>
-                  </div>
-
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                    </div>
-                    <h4 className="font-medium text-white mb-2">No access granted yet</h4>
-                    <p className="text-slate-400 text-sm">Grant access to doctors to share your records</p>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowGrantAccessModal(true)}
-                      className="mt-4 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm transition-colors"
+                    {/* Active Consents */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift"
                     >
-                      Grant Access
-                    </motion.button>
-                  </div>
-                </div>
-
-                {/* Records */}
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-semibold text-white">Recent Records</h3>
-                    <button
-                      onClick={() => setActiveTab('records')}
-                      className="text-emerald-400 text-sm hover:text-emerald-300"
-                    >
-                      View All →
-                    </button>
-                  </div>
-
-                  {records.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                          <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                        </div>
+                        <h3 className="font-semibold text-white">Active Consents</h3>
                       </div>
-                      <h4 className="font-medium text-white mb-2">No records yet</h4>
-                      <p className="text-slate-400 text-sm">Your medical records will appear here</p>
+                      <div className="mb-4">
+                        <div className="text-2xl font-bold text-white mb-1">0</div>
+                        <p className="text-slate-400 text-sm">Doctors with access</p>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setActiveTab('access')}
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 rounded-lg transition-colors"
+                      >
+                        Manage Access
+                      </motion.button>
+                    </motion.div>
+
+                    {/* Pending Requests */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift"
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                          <svg className="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                          </svg>
+                        </div>
+                        <h3 className="font-semibold text-white">Pending Requests</h3>
+                      </div>
+                      <div className="mb-4">
+                        <div className="text-2xl font-bold text-white mb-1">0</div>
+                        <p className="text-slate-400 text-sm">Awaiting your approval</p>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium py-2 rounded-lg transition-colors"
+                      >
+                        Review Requests
+                      </motion.button>
+                    </motion.div>
+                  </div>
+
+                  {/* Bottom Sections */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Messages */}
+                    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="font-semibold text-white">Messages</h3>
+                        <a href="#" className="text-emerald-400 text-sm hover:text-emerald-300">View All →</a>
+                      </div>
+
+                      {dashboardData?.sectionVisibility?.messages?.visible ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                          </div>
+                          <h4 className="font-medium text-white mb-2">No messages yet</h4>
+                          <p className="text-slate-400 text-sm">Messages from your healthcare providers will appear here</p>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setShowGrantAccessModal(true)}
+                            className="mt-4 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm transition-colors"
+                          >
+                            Grant Access to Doctors
+                          </motion.button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                          </div>
+                          <h4 className="font-medium text-white mb-2">Messages Locked</h4>
+                          <p className="text-slate-400 text-sm">{dashboardData?.sectionVisibility?.messages?.message || "Complete your profile to unlock messaging with healthcare providers"}</p>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => router.push('/dashboard/patient/profile')}
+                            className="mt-4 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm transition-colors"
+                          >
+                            Complete Profile
+                          </motion.button>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {records.slice(0, 3).map((record, index) => (
-                        <div key={record.id || index} className="flex items-center gap-3 p-3 bg-slate-900/60 rounded-lg hover:bg-slate-900/80 transition-colors">
-                          <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                            <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+                    {/* Records */}
+                    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="font-semibold text-white">Recent Records</h3>
+                        <button
+                          onClick={() => setActiveTab('records')}
+                          className="text-emerald-400 text-sm hover:text-emerald-300"
+                        >
+                          View All →
+                        </button>
+                      </div>
+
+                      {records.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-white text-sm truncate">{record.title}</p>
-                            <p className="text-slate-400 text-xs">
-                              {record.recordType?.replace('_', ' ') || 'Unknown Type'} • {
-                                record.uploadedAt
-                                  ? new Date(record.uploadedAt).toLocaleDateString()
-                                  : 'Recently uploaded'
-                              }
-                            </p>
-                          </div>
-                          {record.fileUrl && (
-                            <a
-                              href={record.fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-emerald-400 hover:text-emerald-300 text-xs"
+                          <h4 className="font-medium text-white mb-2">No records yet</h4>
+                          <p className="text-slate-400 text-sm">Your medical records will appear here</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {records.slice(0, 3).map((record, index) => (
+                            <div key={record.id || index} className="flex items-center gap-3 p-3 bg-slate-900/60 rounded-lg hover:bg-slate-900/80 transition-colors">
+                              <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                                <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-white text-sm truncate">{record.title}</p>
+                                <p className="text-slate-400 text-xs">
+                                  {record.recordType?.replace('_', ' ') || 'Unknown Type'} • {
+                                    record.uploadedAt
+                                      ? new Date(record.uploadedAt).toLocaleDateString()
+                                      : 'Recently uploaded'
+                                  }
+                                </p>
+                              </div>
+                              {record.fileUrl && (
+                                <a
+                                  href={record.fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-emerald-400 hover:text-emerald-300 text-xs"
+                                >
+                                  View
+                                </a>
+                              )}
+                            </div>
+                          ))}
+                          {records.length > 3 && (
+                            <button
+                              onClick={() => setActiveTab('records')}
+                              className="w-full text-center py-2 text-emerald-400 hover:text-emerald-300 text-sm transition-colors"
                             >
-                              View
-                            </a>
+                              View {records.length - 3} more records →
+                            </button>
                           )}
                         </div>
-                      ))}
-                      {records.length > 3 && (
-                        <button
-                          onClick={() => setActiveTab('records')}
-                          className="w-full text-center py-2 text-emerald-400 hover:text-emerald-300 text-sm transition-colors"
-                        >
-                          View {records.length - 3} more records →
-                        </button>
                       )}
                     </div>
-                  )}
-                </div>
-              </div>
+                  </div>
+                </>
+              )}
             </>
           )}
 

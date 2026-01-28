@@ -32,23 +32,130 @@ enum RecordType {
   OTHER
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum ConsultationPreference {
+  IN_PERSON
+  VIDEO_CALL
+  PHONE_CALL
+  CHAT
+}
+
+enum ConsultationMode {
+  IN_PERSON_ONLY
+  ONLINE_ONLY
+  BOTH
+}
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  role      Role
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  password     String
+  role         Role
+  profileLevel Int      @default(0) // 0-3 profile completion level
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations for access grants
-  grantedAccess AccessGrant[] @relation("PatientGrants")
+  grantedAccess  AccessGrant[] @relation("PatientGrants")
   receivedAccess AccessGrant[] @relation("DoctorGrants")
-  
+
   // Relations for medical records
   medicalRecords MedicalRecord[]
 
+  // Profile relations
+  patientProfile PatientProfile?
+  doctorProfile  DoctorProfile?
+
+  // Assignment relations
+  patientAssignments Assignment[] @relation("PatientAssignments")
+  doctorAssignments  Assignment[] @relation("DoctorAssignments")
+
   @@map("users")
+}
+
+model PatientProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // LEVEL 1 (required)
+  age                     Int?
+  gender                  Gender?
+  primaryProblem          String?
+  symptoms                String[] // max 3
+  consultationPreference  ConsultationPreference?
+
+  // LEVEL 2 (optional)
+  medicalHistory          String[]
+  currentMedications      String[]
+  emergencyContactName    String?
+  emergencyContactPhone   String?
+
+  // LEVEL 3 (optional)
+  vitalsBp                String? // blood pressure
+  vitalsSugar             String? // blood sugar
+  vitalsHeartRate         Int?    // heart rate
+  vitalsOxygen            Int?    // oxygen level
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("patient_profiles")
+}
+
+model DoctorProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // LEVEL 1 (required)
+  specialization     String?
+  experienceYears    Int?
+  conditionsTreated  String[]
+  consultationMode   ConsultationMode?
+  availability       String? // JSON string for availability schedule
+
+  // LEVEL 2 (optional)
+  qualifications     String[]
+  clinicName         String?
+  consultationFee    Float?
+
+  // LEVEL 3 (optional)
+  licenseDocument    String? // URL to license document
+  bio                String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("doctor_profiles")
+}
+
+model Assignment {
+  id         String   @id @default(cuid())
+  patientId  String
+  doctorId   String
+  assignedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  patient User @relation("PatientAssignments", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor  User @relation("DoctorAssignments", fields: [doctorId], references: [id], onDelete: Cascade)
+
+  // Prevent duplicate assignments
+  @@unique([patientId, doctorId])
+  @@map("assignments")
 }
 
 model AccessGrant {
