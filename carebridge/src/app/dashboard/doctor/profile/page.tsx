@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import LampToggle from '@/components/LampToggle'
-import Logo from '@/components/Logo'
 
 interface User {
   name: string
