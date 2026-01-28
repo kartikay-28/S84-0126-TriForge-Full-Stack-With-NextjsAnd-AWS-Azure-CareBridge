@@ -307,7 +307,7 @@ export default function PatientDashboard() {
                       <button
                         onClick={() => {
                           setShowProfileMenu(false)
-                          // TODO: Navigate to profile settings
+                          router.push('/dashboard/patient/profile')
                         }}
                         className="w-full text-left px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors flex items-center gap-2"
                       >
@@ -341,6 +341,44 @@ export default function PatientDashboard() {
         <main className="flex-1 p-6">
           {activeTab === 'dashboard' && (
             <>
+              {/* Profile Completion Card */}
+              <div className="mb-8 animate-fade-in">
+                <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-xl p-6 hover-lift card-entrance">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                        <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Complete Your Profile</h3>
+                        <p className="text-slate-400 text-sm">Get better healthcare recommendations and doctor matching</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-emerald-400">20%</div>
+                        <div className="text-xs text-slate-400">Complete</div>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => router.push('/dashboard/patient/profile')}
+                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors"
+                      >
+                        Complete Now
+                      </motion.button>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <div className="w-full bg-slate-700 rounded-full h-2">
+                      <div className="bg-emerald-500 h-2 rounded-full w-1/5"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Health Metrics */}
               <div className="mb-8 animate-fade-in">
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift card-entrance">
@@ -355,25 +393,25 @@ export default function PatientDashboard() {
                     <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-1">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-slate-400">Blood Pressure</span>
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
                       </div>
-                      <p className="text-lg font-semibold text-white">Normal</p>
+                      <p className="text-lg font-semibold text-slate-400">No data</p>
                     </div>
 
                     <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-2">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-slate-400">Heart Rate</span>
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
                       </div>
-                      <p className="text-lg font-semibold text-white">Normal</p>
+                      <p className="text-lg font-semibold text-slate-400">No data</p>
                     </div>
 
                     <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-3">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-slate-400">Last Checkup</span>
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
                       </div>
-                      <p className="text-lg font-semibold text-white">2024</p>
+                      <p className="text-lg font-semibold text-slate-400">No data</p>
                     </div>
                   </div>
                 </div>
@@ -419,7 +457,10 @@ export default function PatientDashboard() {
                     </div>
                     <h3 className="font-semibold text-white">Active Consents</h3>
                   </div>
-                  <p className="text-slate-400 text-sm mb-4">Doctors with access</p>
+                  <div className="mb-4">
+                    <div className="text-2xl font-bold text-white mb-1">0</div>
+                    <p className="text-slate-400 text-sm">Doctors with access</p>
+                  </div>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -443,7 +484,10 @@ export default function PatientDashboard() {
                     </div>
                     <h3 className="font-semibold text-white">Pending Requests</h3>
                   </div>
-                  <p className="text-slate-400 text-sm mb-4">Awaiting your approval</p>
+                  <div className="mb-4">
+                    <div className="text-2xl font-bold text-white mb-1">0</div>
+                    <p className="text-slate-400 text-sm">Awaiting your approval</p>
+                  </div>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}

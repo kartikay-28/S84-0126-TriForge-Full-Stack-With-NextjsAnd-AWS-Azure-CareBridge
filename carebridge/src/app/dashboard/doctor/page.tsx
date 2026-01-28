@@ -264,7 +264,7 @@ export default function DoctorDashboard() {
                         onClick={() => {
                           console.log('Profile Settings clicked')
                           setShowProfileMenu(false)
-                          // TODO: Navigate to profile settings
+                          router.push('/dashboard/doctor/profile')
                         }}
                         className="w-full text-left px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors flex items-center gap-2"
                       >
@@ -299,6 +299,44 @@ export default function DoctorDashboard() {
         <main className="flex-1 p-6">
           {activeTab === 'dashboard' && (
             <>
+              {/* Profile Completion Card */}
+              <div className="mb-8">
+                <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-xl p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                        <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Complete Your Professional Profile</h3>
+                        <p className="text-slate-400 text-sm">Attract more patients and build professional credibility</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-emerald-400">15%</div>
+                        <div className="text-xs text-slate-400">Complete</div>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => router.push('/dashboard/doctor/profile')}
+                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors"
+                      >
+                        Complete Now
+                      </motion.button>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <div className="w-full bg-slate-700 rounded-full h-2">
+                      <div className="bg-emerald-500 h-2 rounded-full w-[15%]"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 {/* Active Patients */}
@@ -312,7 +350,7 @@ export default function DoctorDashboard() {
                     </div>
                     <h3 className="font-semibold text-white">Active Patients</h3>
                   </div>
-                  <p className="text-2xl font-bold text-white mb-1">24</p>
+                  <p className="text-2xl font-bold text-white mb-1">0</p>
                   <p className="text-slate-400 text-sm">With consent granted</p>
                   <button 
                     onClick={() => setActiveTab('patients')}
@@ -333,7 +371,7 @@ export default function DoctorDashboard() {
                     </div>
                     <h3 className="font-semibold text-white">Pending Requests</h3>
                   </div>
-                  <p className="text-2xl font-bold text-white mb-1">3</p>
+                  <p className="text-2xl font-bold text-white mb-1">0</p>
                   <p className="text-slate-400 text-sm">Awaiting approval</p>
                   <button 
                     onClick={() => setActiveTab('requests')}
@@ -356,7 +394,7 @@ export default function DoctorDashboard() {
                     </div>
                     <h3 className="font-semibold text-white">Total Consents</h3>
                   </div>
-                  <p className="text-2xl font-bold text-white mb-1">27</p>
+                  <p className="text-2xl font-bold text-white mb-1">0</p>
                   <p className="text-slate-400 text-sm">Active access grants</p>
                   <button className="mt-3 text-blue-400 text-sm hover:text-blue-300 transition-colors">
                     Manage →
@@ -376,7 +414,7 @@ export default function DoctorDashboard() {
                     </div>
                     <h3 className="font-semibold text-white">Recent Records</h3>
                   </div>
-                  <p className="text-2xl font-bold text-white mb-1">12</p>
+                  <p className="text-2xl font-bold text-white mb-1">0</p>
                   <p className="text-slate-400 text-sm">Accessed this week</p>
                   <button 
                     onClick={() => setActiveTab('records')}
@@ -441,7 +479,7 @@ export default function DoctorDashboard() {
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="font-semibold text-white">Appointments</h3>
                   <div className="flex items-center gap-3">
-                    <span className="text-slate-400 text-sm">Wednesday, January 21, 2026</span>
+                    <span className="text-slate-400 text-sm">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
