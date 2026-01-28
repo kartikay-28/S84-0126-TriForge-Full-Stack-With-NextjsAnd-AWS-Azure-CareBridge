@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  docker-check:
+  build-test-docker:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,10 +19,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Lint code
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build Next.js app
+        run: npm run build
 
       - name: Docker build validation
-        run: docker build -t carebridge-app .
+        run: docker build -t carebridge-app ./docker
