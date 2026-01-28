@@ -1,178 +1,204 @@
-// TEMPORARILY COMMENTED OUT - Missing database models
-// This route will be enabled once the required database models are added
-
+// DASHBOARD API - Always returns data, never blocks based on profile level
 import { NextRequest, NextResponse } from 'next/server'
-
-export async function GET(_request: NextRequest) {
-  return NextResponse.json(
-    { error: 'Dashboard API temporarily unavailable' },
-    { status: 503 }
-  )
-}
-
-/*
-import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth, handleMiddlewareError } from '@/lib/middleware'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/jwt'
 
-// GET /api/patient/dashboard - Get dashboard summary for patient
+// GET /api/patient/dashboard - Get dashboard data (NEVER BLOCKS)
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Authorization token required' },
-        { status: 401 }
-      )
-    }
+    const user = await requireAuth(request)
 
-    const token = authHeader.substring(7)
-    const payload = verifyToken(token)
-
-    if (payload.role !== 'PATIENT') {
-      return NextResponse.json(
-        { error: 'Access denied. Patient role required.' },
-        { status: 403 }
-      )
-    }
-
-    // Get counts and summaries
-    const [
-      recordsCount,
-      activeConsentsCount,
-      pendingRequestsCount,
-      unreadMessagesCount,
-      latestHealthMetrics,
-      recentRecords,
-      recentMessages
-    ] = await Promise.all([
-      // Total medical records
-      prisma.medicalRecord.count({
-        where: { patientId: payload.userId }
-      }),
-
-      // Active consents (approved access grants)
-      prisma.accessGrant.count({
-        where: {
-          patientId: payload.userId,
-          status: 'APPROVED'
-        }
-      }),
-
-      // Pending access requests
-      prisma.accessGrant.count({
-        where: {
-          patientId: payload.userId,
-          status: 'PENDING'
-        }
-      }),
-
-      // Unread messages from doctors
-      prisma.message.count({
-        where: {
-          patientId: payload.userId,
-          sentBy: 'DOCTOR',
-          readAt: null
-        }
-      }),
-
-      // Latest health metrics (one per type)
-      prisma.healthMetric.findMany({
-        where: { patientId: payload.userId },
-        distinct: ['metricType'],
-        orderBy: { recordedAt: 'desc' },
-        take: 5
-      }),
-
-      // Recent medical records
-      prisma.medicalRecord.findMany({
-        where: { patientId: payload.userId },
-        orderBy: { uploadedAt: 'desc' },
-        take: 3,
-        select: {
-          id: true,
-          title: true,
-          recordType: true,
-          uploadedAt: true
-        }
-      }),
-
-      // Recent messages
-      prisma.message.findMany({
-        where: { patientId: payload.userId },
-        include: {
-          doctor: {
-            select: {
-              id: true,
-              name: true
+    // Get user profile data
+    const userData = await prisma.user.findUnique({
+      where: { id: user.userId },
+      include: {
+        patientProfile: true,
+        doctorProfile: true,
+        patientAssignments: {
+          include: {
+            doctor: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                doctorProfile: {
+                  select: {
+                    specialization: true,
+                    experienceYears: true
+                  }
+                }
+              }
             }
           }
         },
-        orderBy: { sentAt: 'desc' },
-        take: 3
-      })
-    ])
-
-    // Get active doctors (those with approved access)
-    const activeDoctors = await prisma.accessGrant.findMany({
-      where: {
-        patientId: payload.userId,
-        status: 'APPROVED'
-      },
-      include: {
-        doctor: {
-          select: {
-            id: true,
-            name: true,
-            email: true
+        doctorAssignments: {
+          include: {
+            patient: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                patientProfile: {
+                  select: {
+                    primaryProblem: true,
+                    age: true
+                  }
+                }
+              }
+            }
           }
         }
       }
     })
 
-    // Process health metrics for dashboard display
-    const healthMetricsForDashboard = latestHealthMetrics.reduce((acc, metric) => {
-      let displayValue = metric.value
-      let status = 'normal'
+    if (!userData) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
 
-      // Simple status logic (can be enhanced)
-      try {
-        const parsedValue = JSON.parse(metric.value)
-        if (typeof parsedValue === 'object') {
-          displayValue = parsedValue
+    // Define section visibility based on profile level
+    const sectionVisibility = getSectionVisibility(userData.profileLevel, user.role)
+    
+    // Get next recommended step
+    const nextRecommendedStep = getNextRecommendedStep(userData.profileLevel, user.role)
+
+    // Get counts for visible sections
+    const dashboardData: any = {
+      profileLevel: userData.profileLevel,
+      sectionVisibility,
+      nextRecommendedStep,
+      sections: {}
+    }
+
+    // Doctor Assigned section (visible at level 1+)
+    if (sectionVisibility.doctorAssigned.visible) {
+      if (user.role === 'PATIENT') {
+        dashboardData.sections.doctorAssigned = {
+          assigned: userData.patientAssignments.length > 0,
+          doctor: userData.patientAssignments[0]?.doctor || null,
+          assignedAt: userData.patientAssignments[0]?.assignedAt || null
         }
-      } catch {
-        // Value is already a string
+      } else {
+        dashboardData.sections.doctorAssigned = {
+          patientsCount: userData.doctorAssignments.length,
+          recentPatients: userData.doctorAssignments.slice(0, 5).map(a => a.patient)
+        }
       }
+    }
 
-      acc[metric.metricType] = {
-        value: displayValue,
-        unit: metric.unit,
-        recordedAt: metric.recordedAt,
-        status
-      }
-      return acc
-    }, {} as Record<string, any>)
-
-    return NextResponse.json({
-      summary: {
+    // Medical Records section (visible at level 1+)
+    if (sectionVisibility.medicalRecords.visible) {
+      const recordsCount = await prisma.medicalRecord.count({
+        where: { patientId: user.role === 'PATIENT' ? user.userId : undefined }
+      })
+      
+      dashboardData.sections.medicalRecords = {
         totalRecords: recordsCount,
-        activeConsents: activeConsentsCount,
-        pendingRequests: pendingRequestsCount,
-        unreadMessages: unreadMessagesCount
-      },
-      healthMetrics: healthMetricsForDashboard,
-      recentRecords,
-      recentMessages,
-      activeDoctors: activeDoctors.map(grant => grant.doctor),
-      lastUpdated: new Date().toISOString()
-    })
+        recentRecords: user.role === 'PATIENT' ? await prisma.medicalRecord.findMany({
+          where: { patientId: user.userId },
+          orderBy: { uploadedAt: 'desc' },
+          take: 3,
+          select: {
+            id: true,
+            title: true,
+            recordType: true,
+            uploadedAt: true
+          }
+        }) : []
+      }
+    }
+
+    // Health Metrics section (visible at level 3+)
+    if (sectionVisibility.healthMetrics.visible) {
+      dashboardData.sections.healthMetrics = {
+        vitals: user.role === 'PATIENT' ? {
+          bloodPressure: userData.patientProfile?.vitalsBp || null,
+          bloodSugar: userData.patientProfile?.vitalsSugar || null,
+          heartRate: userData.patientProfile?.vitalsHeartRate || null,
+          oxygen: userData.patientProfile?.vitalsOxygen || null
+        } : null,
+        lastUpdated: userData.patientProfile?.updatedAt || null
+      }
+    }
+
+    // AI Insights section (visible at level 3+)
+    if (sectionVisibility.aiInsights.visible) {
+      dashboardData.sections.aiInsights = {
+        available: true,
+        insights: [
+          // Mock insights for now
+          {
+            type: 'health_trend',
+            message: 'Your health metrics show stable patterns',
+            confidence: 0.85
+          }
+        ]
+      }
+    }
+
+    // Appointments section (visible at level 1+)
+    if (sectionVisibility.appointments.visible) {
+      dashboardData.sections.appointments = {
+        upcoming: 0, // Mock data - implement when appointment system is ready
+        recent: 0,
+        nextAppointment: null
+      }
+    }
+
+    return NextResponse.json(dashboardData)
+
   } catch (error) {
-    console.error('Get dashboard error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    console.error('Dashboard error:', error)
+    return handleMiddlewareError(error)
   }
 }
-*/
+
+/**
+ * Get section visibility based on profile level and role
+ */
+function getSectionVisibility(profileLevel: number, _role: string) {
+  const baseMessage = "Please complete your profile to view these records"
+  
+  return {
+    doctorAssigned: {
+      visible: profileLevel >= 1,
+      message: profileLevel < 1 ? baseMessage : null
+    },
+    medicalRecords: {
+      visible: profileLevel >= 1,
+      message: profileLevel < 1 ? "Complete basic profile to access medical records" : null
+    },
+    healthMetrics: {
+      visible: profileLevel >= 3,
+      message: profileLevel < 3 ? "Complete advanced profile to access health metrics" : null
+    },
+    aiInsights: {
+      visible: profileLevel >= 3,
+      message: profileLevel < 3 ? "Complete advanced profile to access AI insights" : null
+    },
+    appointments: {
+      visible: profileLevel >= 1,
+      message: profileLevel < 1 ? baseMessage : null
+    }
+  }
+}
+
+/**
+ * Get next recommended step based on profile level
+ */
+function getNextRecommendedStep(profileLevel: number, role: string): string {
+  switch (profileLevel) {
+    case 0:
+      return `Complete your basic ${role.toLowerCase()} profile to get started`
+    case 1:
+      return `Add recommended information to unlock health metrics and AI insights`
+    case 2:
+      return `Complete advanced profile to access all features including AI insights`
+    case 3:
+      return `Your profile is complete! Explore all available features`
+    default:
+      return `Update your profile information`
+  }
+}

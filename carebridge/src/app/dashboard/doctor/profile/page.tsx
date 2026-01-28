@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import LampToggle from '@/components/LampToggle'
+import { useDoctorProfile } from '@/hooks/useDoctorProfile'
+import { useDoctorDashboard } from '@/hooks/useDoctorDashboard'
 
 interface User {
   name: string
@@ -42,6 +44,10 @@ export default function DoctorProfile() {
   const [completionPercentage, setCompletionPercentage] = useState(0)
   const router = useRouter()
 
+  // Profile hooks
+  const { updateBasicProfile, updateRecommendedProfile, updateAdvancedProfile, isLoading, error } = useDoctorProfile()
+  const { dashboardData, refetch } = useDoctorDashboard()
+
   useEffect(() => {
     const token = localStorage.getItem('token')
     const userName = localStorage.getItem('userName')
@@ -53,35 +59,71 @@ export default function DoctorProfile() {
     }
 
     setUser({ name: userName || 'Doctor', role: userRole })
-    calculateCompletion()
-  }, [router, profileData])
+  }, [router])
 
-  const calculateCompletion = () => {
-    let completed = 0
-    let total = 0
+  useEffect(() => {
+    if (dashboardData) {
+      setCompletionPercentage(Math.round((dashboardData.profileLevel / 3) * 100))
+    }
+  }, [dashboardData])
 
-    // Level 1 fields (weight: 40%)
-    const level1Fields = ['specialization', 'experience', 'conditionsTreated', 'consultationMode', 'availability']
-    level1Fields.forEach(field => {
-      total += 8 // 40% / 5 fields
-      if (profileData[field as keyof DoctorProfileData]) completed += 8
-    })
+  const updateProfileData = (field: string, value: any) => {
+    setProfileData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
 
-    // Level 2 fields (weight: 35%)
-    const level2Fields = ['qualifications', 'clinicInfo', 'consultationFee', 'languagesSpoken']
-    level2Fields.forEach(field => {
-      total += 8.75 // 35% / 4 fields
-      if (profileData[field as keyof DoctorProfileData]) completed += 8.75
-    })
+  const handleSaveBasic = async () => {
+    try {
+      const basicData = {
+        specialization: profileData.specialization,
+        experienceYears: profileData.experience,
+        conditionsTreated: profileData.conditionsTreated,
+        consultationMode: profileData.consultationMode?.[0] || 'IN_PERSON', // Take first selected mode
+        availability: profileData.availability
+      }
 
-    // Level 3 fields (weight: 25%)
-    const level3Fields = ['license', 'detailedBio', 'treatmentNotes', 'prescriptions']
-    level3Fields.forEach(field => {
-      total += 6.25 // 25% / 4 fields
-      if (profileData[field as keyof DoctorProfileData]) completed += 6.25
-    })
+      await updateBasicProfile(basicData)
+      await refetch() // Refresh dashboard data
+      alert('Professional information saved successfully!')
+    } catch (error) {
+      console.error('Failed to save basic profile:', error)
+      alert('Failed to save profile. Please try again.')
+    }
+  }
 
-    setCompletionPercentage(Math.round(completed))
+  const handleSaveRecommended = async () => {
+    try {
+      const recommendedData = {
+        qualifications: profileData.qualifications,
+        clinicName: profileData.clinicInfo?.name,
+        consultationFee: profileData.consultationFee
+      }
+
+      await updateRecommendedProfile(recommendedData)
+      await refetch() // Refresh dashboard data
+      alert('Practice details saved successfully!')
+    } catch (error) {
+      console.error('Failed to save recommended profile:', error)
+      alert('Failed to save profile. Please try again.')
+    }
+  }
+
+  const handleSaveAdvanced = async () => {
+    try {
+      const advancedData = {
+        licenseDocument: profileData.license,
+        bio: profileData.detailedBio
+      }
+
+      await updateAdvancedProfile(advancedData)
+      await refetch() // Refresh dashboard data
+      alert('Advanced data saved successfully!')
+    } catch (error) {
+      console.error('Failed to save advanced profile:', error)
+      alert('Failed to save profile. Please try again.')
+    }
   }
 
   const handleLogout = () => {
@@ -89,13 +131,6 @@ export default function DoctorProfile() {
     localStorage.removeItem('userName')
     localStorage.removeItem('userRole')
     router.push('/auth/login')
-  }
-
-  const updateProfileData = (field: string, value: any) => {
-    setProfileData(prev => ({
-      ...prev,
-      [field]: value
-    }))
   }
 
   if (!user) {
@@ -141,6 +176,13 @@ export default function DoctorProfile() {
       </header>
 
       <div className="p-6">
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p className="text-red-300 text-sm">{error}</p>
+          </div>
+        )}
+
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
@@ -266,25 +308,23 @@ export default function DoctorProfile() {
                     Consultation Modes <span className="text-red-400">*</span>
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {['In-person', 'Video call', 'Phone call'].map((mode) => (
+                    {[
+                      { value: 'IN_PERSON_ONLY', label: 'In-person Only' },
+                      { value: 'ONLINE_ONLY', label: 'Online Only' },
+                      { value: 'BOTH', label: 'Both In-person & Online' }
+                    ].map((mode) => (
                       <motion.button
-                        key={mode}
+                        key={mode.value}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => {
-                          const current = profileData.consultationMode || []
-                          const updated = current.includes(mode)
-                            ? current.filter(m => m !== mode)
-                            : [...current, mode]
-                          updateProfileData('consultationMode', updated)
-                        }}
+                        onClick={() => updateProfileData('consultationMode', [mode.value])}
                         className={`p-3 rounded-lg border transition-all ${
-                          profileData.consultationMode?.includes(mode)
+                          profileData.consultationMode?.includes(mode.value)
                             ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
                             : 'bg-slate-900 border-slate-600 text-slate-300 hover:border-slate-500'
                         }`}
                       >
-                        {mode}
+                        {mode.label}
                       </motion.button>
                     ))}
                   </div>
@@ -317,9 +357,11 @@ export default function DoctorProfile() {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors"
+                    onClick={handleSaveBasic}
+                    disabled={isLoading}
+                    className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                   >
-                    Save Professional Info
+                    {isLoading ? 'Saving...' : 'Save Professional Info'}
                   </motion.button>
                 </div>
               </div>
@@ -426,9 +468,11 @@ export default function DoctorProfile() {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg transition-colors"
+                      onClick={handleSaveRecommended}
+                      disabled={isLoading}
+                      className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                     >
-                      Save Details
+                      {isLoading ? 'Saving...' : 'Save Details'}
                     </motion.button>
                   </div>
                 </div>
@@ -531,9 +575,11 @@ export default function DoctorProfile() {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
+                    onClick={handleSaveAdvanced}
+                    disabled={isLoading}
+                    className="px-6 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                   >
-                    Save Advanced Data
+                    {isLoading ? 'Saving...' : 'Save Advanced Data'}
                   </motion.button>
                 </div>
               </div>
