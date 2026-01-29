@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom'
 import LampToggle from '@/components/LampToggle'
 import Logo from '@/components/Logo'
 import { useDoctorDashboard } from '@/hooks/useDoctorDashboard'
+import ProfileCompletionCard from '@/components/ProfileCompletionCard'
 
 interface User {
   name: string
@@ -354,43 +355,14 @@ export default function DoctorDashboard() {
               ) : (
                 /* Full Dashboard - Profile Level 1+ */
                 <>
-                  {/* Profile Progress Card - Only show if not fully complete */}
+                  {/* Profile Completion Card - Only show if not fully complete */}
                   {dashboardData.profileLevel < 3 && (
                     <div className="mb-8">
-                      <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-xl p-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                              <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <h3 className="text-lg font-semibold text-white">Complete Your Professional Profile</h3>
-                              <p className="text-slate-400 text-sm">Attract more patients and build professional credibility</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <div className="text-2xl font-bold text-emerald-400">{Math.round((dashboardData.profileLevel / 3) * 100)}%</div>
-                              <div className="text-xs text-slate-400">Complete</div>
-                            </div>
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => router.push('/dashboard/doctor/profile')}
-                              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors"
-                            >
-                              Continue Setup
-                            </motion.button>
-                          </div>
-                        </div>
-                        <div className="mt-4">
-                          <div className="w-full bg-slate-700 rounded-full h-2">
-                            <div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${(dashboardData.profileLevel / 3) * 100}%` }}></div>
-                          </div>
-                        </div>
-                      </div>
+                      <ProfileCompletionCard
+                        userType="doctor"
+                        completionPercentage={Math.round((dashboardData.profileLevel / 3) * 100)}
+                        onComplete={() => router.push('/dashboard/doctor/profile')}
+                      />
                     </div>
                   )}
 

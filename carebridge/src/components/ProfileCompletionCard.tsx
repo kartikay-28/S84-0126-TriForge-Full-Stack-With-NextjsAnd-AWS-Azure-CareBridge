@@ -73,50 +73,72 @@ export default function ProfileCompletionCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-xl p-6 hover-lift"
+      className="profile-completion-card relative bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-xl p-6 hover-lift overflow-hidden backdrop-blur-sm"
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center">
-            {getIcon()}
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-white">{getTitle()}</h3>
-            <p className="text-slate-400 text-sm">{getDescription()}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <div className={`text-2xl font-bold ${getStatusColor()}`}>
-              {completionPercentage}%
+      {/* Animated Gloss Effect - Diagonal Movement */}
+      <div className="gloss-sweep absolute inset-0 pointer-events-none" />
+      
+      {/* Secondary Shimmer Effect */}
+      <div className="shimmer-sweep absolute inset-0 pointer-events-none opacity-60" />
+      
+      {/* Content */}
+      <div className="relative z-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="icon-container w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center border border-white/20 relative overflow-hidden backdrop-blur-sm">
+              {/* Icon gloss effect */}
+              <div className="icon-gloss absolute inset-0 pointer-events-none" />
+              <div className="relative z-10">
+                {getIcon()}
+              </div>
             </div>
-            <div className="text-xs text-slate-400">Complete</div>
+            <div>
+              <h3 className="text-lg font-semibold text-white drop-shadow-sm">{getTitle()}</h3>
+              <p className="text-slate-400 text-sm">{getDescription()}</p>
+            </div>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleComplete}
-            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors"
-          >
-            {getButtonText()}
-          </motion.button>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <div className={`text-2xl font-bold ${getStatusColor()} drop-shadow-sm`}>
+                {completionPercentage}%
+              </div>
+              <div className="text-xs text-slate-400">Complete</div>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleComplete}
+              className="button-glass relative px-4 py-2 bg-emerald-500/80 hover:bg-emerald-600/80 text-white font-medium rounded-lg transition-colors border border-white/20 overflow-hidden backdrop-blur-sm"
+            >
+              {/* Button gloss effect */}
+              <div className="button-gloss absolute inset-0 pointer-events-none" />
+              <span className="relative z-10 drop-shadow-sm">{getButtonText()}</span>
+            </motion.button>
+          </div>
+        </div>
+        <div className="mt-4">
+          <div className="w-full bg-slate-700/30 rounded-full h-2 border border-white/10 overflow-hidden backdrop-blur-sm">
+            <motion.div
+              className={`progress-bar h-2 rounded-full ${getProgressColor()} relative overflow-hidden`}
+              initial={{ width: 0 }}
+              animate={{ width: `${completionPercentage}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            >
+              {/* Progress bar gloss effect */}
+              <div className="progress-gloss absolute inset-0 pointer-events-none" />
+            </motion.div>
+          </div>
+          <div className="flex justify-between mt-2 text-xs text-slate-400">
+            <span>Basic Info</span>
+            <span>Details</span>
+            <span>Advanced</span>
+          </div>
         </div>
       </div>
-      <div className="mt-4">
-        <div className="w-full bg-slate-700 rounded-full h-2">
-          <motion.div
-            className={`h-2 rounded-full ${getProgressColor()}`}
-            initial={{ width: 0 }}
-            animate={{ width: `${completionPercentage}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          />
-        </div>
-        <div className="flex justify-between mt-2 text-xs text-slate-400">
-          <span>Basic Info</span>
-          <span>Details</span>
-          <span>Advanced</span>
-        </div>
-      </div>
+      
+      {/* Corner highlights */}
+      <div className="absolute top-2 right-2 w-8 h-8 bg-gradient-to-br from-white/30 to-transparent rounded-full opacity-60"></div>
+      <div className="absolute bottom-2 left-2 w-6 h-6 bg-gradient-to-tr from-emerald-400/30 to-transparent rounded-full opacity-40"></div>
     </motion.div>
   )
 }
