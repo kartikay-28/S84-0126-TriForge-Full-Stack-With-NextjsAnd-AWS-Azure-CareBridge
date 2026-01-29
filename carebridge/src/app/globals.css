@@ -1503,3 +1503,150 @@ html {
     0 4px 15px rgba(0, 0, 0, 0.3),
     0 2px 8px rgba(0, 0, 0, 0.2);
 }
+/* Profile Completion Card Glassy Animations */
+.profile-completion-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.gloss-sweep {
+  background: linear-gradient(45deg, transparent 20%, rgba(255, 255, 255, 0.6) 50%, transparent 80%);
+  animation: glossSweepDiagonal 3s ease-in-out infinite;
+}
+
+.shimmer-sweep {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: shimmerSweepHorizontal 2.5s ease-in-out infinite 1s;
+}
+
+.icon-gloss {
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: iconGlossDiagonal 2s ease-in-out infinite 0.5s;
+}
+
+.button-gloss {
+  background: linear-gradient(110deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  animation: buttonGlossSkew 1.8s ease-in-out infinite 1.2s;
+}
+
+.progress-gloss {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.6));
+  animation: progressGlossHorizontal 2s ease-in-out infinite 1.8s;
+}
+
+/* Keyframe Animations */
+@keyframes glossSweepDiagonal {
+  0% {
+    transform: translateX(-120%) translateY(-120%) rotate(45deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(120%) translateY(120%) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmerSweepHorizontal {
+  0% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+@keyframes iconGlossDiagonal {
+  0% {
+    transform: translateX(-120%) rotate(45deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(120%) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+@keyframes buttonGlossSkew {
+  0% {
+    transform: translateX(-120%) skewX(-15deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(220%) skewX(-15deg);
+    opacity: 0;
+  }
+}
+
+@keyframes progressGlossHorizontal {
+  0% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+/* Enhanced glass morphism for profile card */
+.profile-completion-card:hover {
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  box-shadow: 
+    0 25px 50px -12px rgba(16, 185, 129, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Icon container glass effect */
+.icon-container {
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+/* Button glass effect */
+.button-glass {
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+/* Progress bar container glass effect */
+.progress-bar {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}

@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, handleMiddlewareError } from '@/lib/middleware'
+import { prisma } from '@/lib/prisma'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
     // Verify authentication
     const user = await requireAuth(request)
 
     // Get file path from URL parameters
-    const filePath = params.path.join('/')
+    const resolvedParams = await params
+    const filePath = resolvedParams.path.join('/')
     
     // Security check - ensure path doesn't contain directory traversal
     if (filePath.includes('..') || filePath.includes('\\')) {
@@ -55,6 +57,7 @@ export async function GET(
     // Read and serve the file
     const fileBuffer = await readFile(fullPath)
     const mimeType = getMimeType(filePath)
+    const fileName = filePath.split('/').pop()
 
     return new NextResponse(fileBuffer, {
       headers: {

@@ -10,7 +10,7 @@ import Logo from '@/components/Logo'
 import FileUpload from '@/components/FileUpload'
 import { useFileUpload } from '@/hooks/useFileUpload'
 import { useDashboard } from '@/hooks/useDashboard'
-import ProfileProgress from '@/components/ProfileProgress'
+import ProfileCompletionCard from '@/components/ProfileCompletionCard'
 import SectionLock from '@/components/SectionLock'
 
 interface User {
@@ -400,13 +400,13 @@ export default function PatientDashboard() {
               ) : (
                 /* Full Dashboard - Profile Level 1+ */
                 <>
-                  {/* Profile Progress Card - Only show if not fully complete */}
+                  {/* Profile Completion Card - Only show if not fully complete */}
                   {dashboardData.profileLevel < 3 && (
                     <div className="mb-8 animate-fade-in">
-                      <ProfileProgress
-                        profileLevel={dashboardData.profileLevel}
-                        nextStep={dashboardData.nextRecommendedStep}
-                        onStartProfile={() => router.push('/dashboard/patient/profile')}
+                      <ProfileCompletionCard
+                        userType="patient"
+                        completionPercentage={Math.round((dashboardData.profileLevel / 3) * 100)}
+                        onComplete={() => router.push('/dashboard/patient/profile')}
                       />
                     </div>
                   )}
