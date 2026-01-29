@@ -2,6 +2,30 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, handleMiddlewareError } from '@/lib/middleware'
 import { prisma } from '@/lib/prisma'
 
+// GET /api/doctor/profile/recommended - Get current recommended doctor profile data
+export async function GET(request: NextRequest) {
+  try {
+    const user = await requireAuth(request)
+
+    if (user.role !== 'DOCTOR') {
+      return NextResponse.json({ error: 'Access denied. Doctor role required.' }, { status: 403 })
+    }
+
+    const doctorProfile = await prisma.doctorProfile.findUnique({
+      where: { userId: user.userId }
+    })
+
+    return NextResponse.json({
+      profile: doctorProfile,
+      exists: !!doctorProfile
+    })
+
+  } catch (error) {
+    console.error('Get doctor recommended profile error:', error)
+    return handleMiddlewareError(error)
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication

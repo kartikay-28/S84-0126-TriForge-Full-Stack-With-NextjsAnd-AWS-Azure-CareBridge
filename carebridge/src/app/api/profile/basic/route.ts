@@ -2,6 +2,39 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, handleMiddlewareError } from '@/lib/middleware'
 import { prisma } from '@/lib/prisma'
 
+// GET /api/profile/basic - Get current basic profile data
+export async function GET(request: NextRequest) {
+  try {
+    const user = await requireAuth(request)
+
+    if (user.role === 'PATIENT') {
+      const patientProfile = await prisma.patientProfile.findUnique({
+        where: { userId: user.userId }
+      })
+
+      return NextResponse.json({
+        profile: patientProfile,
+        exists: !!patientProfile
+      })
+    } else if (user.role === 'DOCTOR') {
+      const doctorProfile = await prisma.doctorProfile.findUnique({
+        where: { userId: user.userId }
+      })
+
+      return NextResponse.json({
+        profile: doctorProfile,
+        exists: !!doctorProfile
+      })
+    }
+
+    return NextResponse.json({ profile: null, exists: false })
+
+  } catch (error) {
+    console.error('Get basic profile error:', error)
+    return handleMiddlewareError(error)
+  }
+}
+
 // POST /api/profile/basic - Update LEVEL 1 profile fields
 export async function POST(request: NextRequest) {
   try {

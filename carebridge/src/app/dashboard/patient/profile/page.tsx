@@ -48,8 +48,15 @@ export default function PatientProfile() {
   const router = useRouter()
 
   // Profile hooks
-  const { updateBasicProfile, updateRecommendedProfile, updateAdvancedProfile, isLoading, error } = useProfile()
+  const { fetchBasicProfile, fetchRecommendedProfile, fetchAdvancedProfile, updateBasicProfile, updateRecommendedProfile, updateAdvancedProfile, isLoading, error } = useProfile()
   const { dashboardData, refetch } = useDashboard()
+
+  // Track if profile data exists (for showing Update vs Save)
+  const [profileExists, setProfileExists] = useState({
+    basic: false,
+    recommended: false,
+    advanced: false
+  })
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -69,6 +76,64 @@ export default function PatientProfile() {
       setCompletionPercentage(Math.round((dashboardData.profileLevel / 3) * 100))
     }
   }, [dashboardData])
+
+  // Fetch existing profile data when component mounts (only once)
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!user) return
+
+      try {
+        // Fetch basic profile data
+        const basicResult = await fetchBasicProfile()
+        if (basicResult.exists && basicResult.profile) {
+          const profile = basicResult.profile
+          setProfileData(prev => ({
+            ...prev,
+            age: profile.age,
+            gender: profile.gender,
+            primaryProblem: profile.primaryProblem,
+            symptoms: profile.symptoms || [],
+            consultationPreference: profile.consultationPreference
+          }))
+          setProfileExists(prev => ({ ...prev, basic: true }))
+        }
+
+        // Fetch recommended profile data
+        const recommendedResult = await fetchRecommendedProfile()
+        if (recommendedResult.exists && recommendedResult.profile) {
+          const profile = recommendedResult.profile
+          setProfileData(prev => ({
+            ...prev,
+            medicalHistory: profile.medicalHistory?.[0] || '',
+            currentMedications: profile.currentMedications || [],
+            emergencyContact: {
+              name: profile.emergencyContactName || '',
+              phone: profile.emergencyContactPhone || '',
+              relationship: ''
+            }
+          }))
+          setProfileExists(prev => ({ ...prev, recommended: true }))
+        }
+
+        // Fetch advanced profile data
+        const advancedResult = await fetchAdvancedProfile()
+        if (advancedResult.exists && advancedResult.profile) {
+          const profile = advancedResult.profile
+          setProfileData(prev => ({
+            ...prev,
+            healthMetrics: profile.healthMetrics || [],
+            medicalReports: profile.medicalReports || []
+          }))
+          setProfileExists(prev => ({ ...prev, advanced: true }))
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile data:', error)
+      }
+    }
+
+    // Only fetch once when user is available
+    fetchProfileData()
+  }, [user]) // Remove the fetch functions from dependencies to prevent infinite loop
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -96,6 +161,7 @@ export default function PatientProfile() {
 
       await updateBasicProfile(basicData)
       await refetch() // Refresh dashboard data
+      setProfileExists(prev => ({ ...prev, basic: true }))
       alert('Basic profile saved successfully!')
     } catch (error) {
       console.error('Failed to save basic profile:', error)
@@ -114,6 +180,7 @@ export default function PatientProfile() {
 
       await updateRecommendedProfile(recommendedData)
       await refetch() // Refresh dashboard data
+      setProfileExists(prev => ({ ...prev, recommended: true }))
       alert('Medical details saved successfully!')
     } catch (error) {
       console.error('Failed to save recommended profile:', error)
@@ -130,6 +197,7 @@ export default function PatientProfile() {
 
       await updateAdvancedProfile(advancedData)
       await refetch() // Refresh dashboard data
+      setProfileExists(prev => ({ ...prev, advanced: true }))
       alert('Advanced data saved successfully!')
     } catch (error) {
       console.error('Failed to save advanced profile:', error)
@@ -356,7 +424,7 @@ export default function PatientProfile() {
                     disabled={isLoading}
                     className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                   >
-                    {isLoading ? 'Saving...' : 'Save Essential Info'}
+                    {isLoading ? 'Saving...' : profileExists.basic ? 'Update Essential Info' : 'Save Essential Info'}
                   </motion.button>
                 </div>
               </div>
@@ -542,7 +610,7 @@ export default function PatientProfile() {
                       disabled={isLoading}
                       className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                     >
-                      {isLoading ? 'Saving...' : 'Save Details'}
+                      {isLoading ? 'Saving...' : profileExists.recommended ? 'Update Details' : 'Save Details'}
                     </motion.button>
                   </div>
                 </div>
@@ -619,7 +687,7 @@ export default function PatientProfile() {
                     disabled={isLoading}
                     className="px-6 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                   >
-                    {isLoading ? 'Saving...' : 'Save Advanced Data'}
+                    {isLoading ? 'Saving...' : profileExists.advanced ? 'Update Advanced Data' : 'Save Advanced Data'}
                   </motion.button>
                 </div>
               </div>

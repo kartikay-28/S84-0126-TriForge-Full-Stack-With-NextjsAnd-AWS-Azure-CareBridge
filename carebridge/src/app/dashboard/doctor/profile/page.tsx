@@ -45,8 +45,15 @@ export default function DoctorProfile() {
   const router = useRouter()
 
   // Profile hooks
-  const { updateBasicProfile, updateRecommendedProfile, updateAdvancedProfile, isLoading, error } = useDoctorProfile()
+  const { fetchBasicProfile, fetchRecommendedProfile, fetchAdvancedProfile, updateBasicProfile, updateRecommendedProfile, updateAdvancedProfile, isLoading, error } = useDoctorProfile()
   const { dashboardData, refetch } = useDoctorDashboard()
+
+  // Track if profile data exists (for showing Update vs Save)
+  const [profileExists, setProfileExists] = useState({
+    basic: false,
+    recommended: false,
+    advanced: false
+  })
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -67,6 +74,64 @@ export default function DoctorProfile() {
     }
   }, [dashboardData])
 
+  // Fetch existing profile data when component mounts (only once)
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!user) return
+
+      try {
+        // Fetch basic profile data
+        const basicResult = await fetchBasicProfile()
+        if (basicResult.exists && basicResult.profile) {
+          const profile = basicResult.profile
+          setProfileData(prev => ({
+            ...prev,
+            specialization: profile.specialization,
+            experience: profile.experienceYears,
+            conditionsTreated: profile.conditionsTreated || [],
+            consultationMode: profile.consultationMode ? [profile.consultationMode] : [],
+            availability: profile.availability
+          }))
+          setProfileExists(prev => ({ ...prev, basic: true }))
+        }
+
+        // Fetch recommended profile data
+        const recommendedResult = await fetchRecommendedProfile()
+        if (recommendedResult.exists && recommendedResult.profile) {
+          const profile = recommendedResult.profile
+          setProfileData(prev => ({
+            ...prev,
+            qualifications: profile.qualifications || [],
+            clinicInfo: {
+              name: profile.clinicName || '',
+              address: '',
+              phone: ''
+            },
+            consultationFee: profile.consultationFee
+          }))
+          setProfileExists(prev => ({ ...prev, recommended: true }))
+        }
+
+        // Fetch advanced profile data
+        const advancedResult = await fetchAdvancedProfile()
+        if (advancedResult.exists && advancedResult.profile) {
+          const profile = advancedResult.profile
+          setProfileData(prev => ({
+            ...prev,
+            license: profile.licenseDocument,
+            detailedBio: profile.bio
+          }))
+          setProfileExists(prev => ({ ...prev, advanced: true }))
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile data:', error)
+      }
+    }
+
+    // Only fetch once when user is available
+    fetchProfileData()
+  }, [user]) // Remove the fetch functions from dependencies to prevent infinite loop
+
   const updateProfileData = (field: string, value: any) => {
     setProfileData(prev => ({
       ...prev,
@@ -86,6 +151,7 @@ export default function DoctorProfile() {
 
       await updateBasicProfile(basicData)
       await refetch() // Refresh dashboard data
+      setProfileExists(prev => ({ ...prev, basic: true }))
       alert('Professional information saved successfully!')
     } catch (error) {
       console.error('Failed to save basic profile:', error)
@@ -103,6 +169,7 @@ export default function DoctorProfile() {
 
       await updateRecommendedProfile(recommendedData)
       await refetch() // Refresh dashboard data
+      setProfileExists(prev => ({ ...prev, recommended: true }))
       alert('Practice details saved successfully!')
     } catch (error) {
       console.error('Failed to save recommended profile:', error)
@@ -119,6 +186,7 @@ export default function DoctorProfile() {
 
       await updateAdvancedProfile(advancedData)
       await refetch() // Refresh dashboard data
+      setProfileExists(prev => ({ ...prev, advanced: true }))
       alert('Advanced data saved successfully!')
     } catch (error) {
       console.error('Failed to save advanced profile:', error)
@@ -361,7 +429,7 @@ export default function DoctorProfile() {
                     disabled={isLoading}
                     className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                   >
-                    {isLoading ? 'Saving...' : 'Save Professional Info'}
+                    {isLoading ? 'Saving...' : profileExists.basic ? 'Update Professional Info' : 'Save Professional Info'}
                   </motion.button>
                 </div>
               </div>
@@ -472,7 +540,7 @@ export default function DoctorProfile() {
                       disabled={isLoading}
                       className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                     >
-                      {isLoading ? 'Saving...' : 'Save Details'}
+                      {isLoading ? 'Saving...' : profileExists.recommended ? 'Update Details' : 'Save Details'}
                     </motion.button>
                   </div>
                 </div>
@@ -579,7 +647,7 @@ export default function DoctorProfile() {
                     disabled={isLoading}
                     className="px-6 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                   >
-                    {isLoading ? 'Saving...' : 'Save Advanced Data'}
+                    {isLoading ? 'Saving...' : profileExists.advanced ? 'Update Advanced Data' : 'Save Advanced Data'}
                   </motion.button>
                 </div>
               </div>
