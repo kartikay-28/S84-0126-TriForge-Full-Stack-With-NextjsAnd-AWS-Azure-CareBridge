@@ -35,9 +35,11 @@ interface ProfileData {
     exercise: string
   }
   
-  // Level 3 - Advanced
-  healthMetrics?: any[]
-  medicalReports?: any[]
+  // Level 3 - Advanced (Vitals)
+  vitalsBp?: string
+  vitalsSugar?: string
+  vitalsHeartRate?: number
+  vitalsOxygen?: number
 }
 
 export default function PatientProfile() {
@@ -121,8 +123,10 @@ export default function PatientProfile() {
           const profile = advancedResult.profile
           setProfileData(prev => ({
             ...prev,
-            healthMetrics: profile.healthMetrics || [],
-            medicalReports: profile.medicalReports || []
+            vitalsBp: profile.vitalsBp || '',
+            vitalsSugar: profile.vitalsSugar || '',
+            vitalsHeartRate: profile.vitalsHeartRate || '',
+            vitalsOxygen: profile.vitalsOxygen || ''
           }))
           setProfileExists(prev => ({ ...prev, advanced: true }))
         }
@@ -191,14 +195,16 @@ export default function PatientProfile() {
   const handleSaveAdvanced = async () => {
     try {
       const advancedData = {
-        healthMetrics: profileData.healthMetrics,
-        medicalReports: profileData.medicalReports
+        vitalsBp: profileData.vitalsBp,
+        vitalsSugar: profileData.vitalsSugar,
+        vitalsHeartRate: profileData.vitalsHeartRate,
+        vitalsOxygen: profileData.vitalsOxygen
       }
 
       await updateAdvancedProfile(advancedData)
       await refetch() // Refresh dashboard data
       setProfileExists(prev => ({ ...prev, advanced: true }))
-      alert('Advanced data saved successfully!')
+      alert('Advanced vitals data saved successfully!')
     } catch (error) {
       console.error('Failed to save advanced profile:', error)
       alert('Failed to save profile. Please try again.')
@@ -632,53 +638,81 @@ export default function PatientProfile() {
                   <span className="text-blue-400 font-bold">3</span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Advanced Data</h3>
-                  <p className="text-slate-400 text-sm">AI insights, reports, analytics • Context-driven</p>
+                  <h3 className="text-lg font-semibold text-white">Advanced Vitals Data</h3>
+                  <p className="text-slate-400 text-sm">Track your vital signs for better health monitoring</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Health Metrics */}
-                <div className="bg-slate-900/60 rounded-lg p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    <h4 className="font-semibold text-white">Health Metrics</h4>
-                  </div>
-                  <p className="text-slate-400 text-sm mb-4">Track vital signs and health indicators</p>
-                  <div className="space-y-3">
-                    {['Blood Pressure', 'Blood Sugar', 'Weight', 'Heart Rate'].map((metric) => (
-                      <div key={metric} className="flex items-center justify-between p-3 bg-slate-800 rounded-lg">
-                        <span className="text-slate-300">{metric}</span>
-                        <button className="text-blue-400 text-sm hover:text-blue-300">Add</button>
-                      </div>
-                    ))}
-                  </div>
+                {/* Blood Pressure */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Blood Pressure
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.vitalsBp || ''}
+                    onChange={(e) => updateProfileData('vitalsBp', e.target.value)}
+                    placeholder="e.g., 120/80"
+                    className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Format: systolic/diastolic (e.g., 120/80)</p>
                 </div>
 
-                {/* Medical Reports */}
-                <div className="bg-slate-900/60 rounded-lg p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <h4 className="font-semibold text-white">Medical Reports</h4>
-                  </div>
-                  <p className="text-slate-400 text-sm mb-4">Upload lab results, scans, and reports</p>
-                  <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center">
-                    <svg className="w-8 h-8 text-slate-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <p className="text-slate-400 text-sm">Drop files here or click to upload</p>
-                  </div>
+                {/* Blood Sugar */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Blood Sugar
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.vitalsSugar || ''}
+                    onChange={(e) => updateProfileData('vitalsSugar', e.target.value)}
+                    placeholder="e.g., 95 mg/dL"
+                    className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Include units (mg/dL or mmol/L)</p>
+                </div>
+
+                {/* Heart Rate */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Heart Rate (BPM)
+                  </label>
+                  <input
+                    type="number"
+                    value={profileData.vitalsHeartRate || ''}
+                    onChange={(e) => updateProfileData('vitalsHeartRate', parseInt(e.target.value) || '')}
+                    placeholder="e.g., 72"
+                    min="30"
+                    max="200"
+                    className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Normal range: 60-100 BPM</p>
+                </div>
+
+                {/* Oxygen Level */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Oxygen Saturation (%)
+                  </label>
+                  <input
+                    type="number"
+                    value={profileData.vitalsOxygen || ''}
+                    onChange={(e) => updateProfileData('vitalsOxygen', parseInt(e.target.value) || '')}
+                    placeholder="e.g., 98"
+                    min="70"
+                    max="100"
+                    className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Normal range: 95-100%</p>
                 </div>
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-700">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-slate-400">
-                    🧠 Enables AI insights and detailed analytics
+                    🩺 Enables AI health insights and personalized recommendations
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -687,7 +721,7 @@ export default function PatientProfile() {
                     disabled={isLoading}
                     className="px-6 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                   >
-                    {isLoading ? 'Saving...' : profileExists.advanced ? 'Update Advanced Data' : 'Save Advanced Data'}
+                    {isLoading ? 'Saving...' : profileExists.advanced ? 'Update Vitals Data' : 'Save Vitals Data'}
                   </motion.button>
                 </div>
               </div>

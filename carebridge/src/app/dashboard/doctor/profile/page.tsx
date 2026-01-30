@@ -3,9 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import * as Dialog from '@radix-ui/react-dialog'
 import LampToggle from '@/components/LampToggle'
 import { useDoctorProfile } from '@/hooks/useDoctorProfile'
 import { useDoctorDashboard } from '@/hooks/useDoctorDashboard'
+import { useFileUpload } from '@/hooks/useFileUpload'
+import FileUpload from '@/components/FileUpload'
 
 interface User {
   name: string
@@ -31,10 +34,8 @@ interface DoctorProfileData {
   languagesSpoken?: string[]
   
   // Level 3 - Advanced
-  license?: string
-  detailedBio?: string
-  treatmentNotes?: any[]
-  prescriptions?: any[]
+  licenseDocument?: string
+  bio?: string
 }
 
 export default function DoctorProfile() {
@@ -42,11 +43,16 @@ export default function DoctorProfile() {
   const [profileData, setProfileData] = useState<DoctorProfileData>({})
   const [activeLevel, setActiveLevel] = useState(1)
   const [completionPercentage, setCompletionPercentage] = useState(0)
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [uploadedLicenseFile, setUploadedLicenseFile] = useState<string | null>(null)
   const router = useRouter()
 
   // Profile hooks
   const { fetchBasicProfile, fetchRecommendedProfile, fetchAdvancedProfile, updateBasicProfile, updateRecommendedProfile, updateAdvancedProfile, isLoading, error } = useDoctorProfile()
   const { dashboardData, refetch } = useDoctorDashboard()
+  
+  // File upload hook
+  const { uploadFile, isUploading } = useFileUpload()
 
   // Track if profile data exists (for showing Update vs Save)
   const [profileExists, setProfileExists] = useState({
@@ -118,9 +124,16 @@ export default function DoctorProfile() {
           const profile = advancedResult.profile
           setProfileData(prev => ({
             ...prev,
-            license: profile.licenseDocument,
-            detailedBio: profile.bio
+            licenseDocument: profile.licenseDocument || '',
+            bio: profile.bio || ''
           }))
+          
+          // If there's a license document URL, extract the filename for display
+          if (profile.licenseDocument) {
+            const fileName = profile.licenseDocument.split('/').pop() || 'License Document'
+            setUploadedLicenseFile(fileName)
+          }
+          
           setProfileExists(prev => ({ ...prev, advanced: true }))
         }
       } catch (error) {
@@ -180,17 +193,40 @@ export default function DoctorProfile() {
   const handleSaveAdvanced = async () => {
     try {
       const advancedData = {
-        licenseDocument: profileData.license,
-        bio: profileData.detailedBio
+        licenseDocument: profileData.licenseDocument,
+        bio: profileData.bio
       }
 
       await updateAdvancedProfile(advancedData)
       await refetch() // Refresh dashboard data
       setProfileExists(prev => ({ ...prev, advanced: true }))
-      alert('Advanced data saved successfully!')
+      alert('Advanced professional data saved successfully!')
     } catch (error) {
       console.error('Failed to save advanced profile:', error)
       alert('Failed to save profile. Please try again.')
+    }
+  }
+
+  const handleUploadLicense = async (file: File, metadata: { title: string; description: string; recordType: string }) => {
+    try {
+      const result = await uploadFile(file, {
+        ...metadata,
+        recordType: 'license_document'
+      })
+      
+      if (result.record && result.record.fileUrl) {
+        // Update the license document URL in profile data
+        setProfileData(prev => ({
+          ...prev,
+          licenseDocument: result.record.fileUrl
+        }))
+        setUploadedLicenseFile(result.record.fileName || file.name)
+        setShowUploadModal(false)
+        alert('License document uploaded successfully!')
+      }
+    } catch (error) {
+      console.error('Failed to upload license:', error)
+      alert('Failed to upload license document. Please try again.')
     }
   }
 
@@ -563,82 +599,92 @@ export default function DoctorProfile() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Advanced Professional Data</h3>
-                  <p className="text-slate-400 text-sm">Enhanced features, analytics, detailed patient management • Context-driven</p>
+                  <p className="text-slate-400 text-sm">Complete your professional credentials and detailed information</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* License Upload */}
-                <div className="bg-slate-900/60 rounded-lg p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <h4 className="font-semibold text-white">Medical License</h4>
-                  </div>
-                  <p className="text-slate-400 text-sm mb-4">Upload your medical license for verification</p>
-                  <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center">
-                    <svg className="w-8 h-8 text-slate-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <p className="text-slate-400 text-sm">Upload license document</p>
-                  </div>
+              <div className="space-y-6">
+                {/* License Document Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Medical License Document
+                  </label>
+                  
+                  {profileData.licenseDocument || uploadedLicenseFile ? (
+                    <div className="bg-slate-900 border border-slate-600 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <div>
+                            <p className="text-white font-medium">
+                              {uploadedLicenseFile || 'License Document'}
+                            </p>
+                            <p className="text-slate-400 text-sm">Document uploaded successfully</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          {profileData.licenseDocument && (
+                            <motion.a
+                              href={`/api/files/medical-records/${uploadedLicenseFile || 'license-document'}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                            >
+                              View
+                            </motion.a>
+                          )}
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setShowUploadModal(true)}
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                          >
+                            Replace
+                          </motion.button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => setShowUploadModal(true)}
+                      className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center cursor-pointer hover:border-slate-500 transition-colors"
+                    >
+                      <svg className="w-12 h-12 text-slate-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p className="text-slate-300 font-medium mb-2">Upload Medical License</p>
+                      <p className="text-slate-400 text-sm">Click to upload your medical license document</p>
+                      <p className="text-slate-500 text-xs mt-2">Supported formats: PDF, JPG, PNG (Max 10MB)</p>
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-slate-500 mt-2">Upload your medical license document for professional verification</p>
                 </div>
 
-                {/* Detailed Bio */}
-                <div className="bg-slate-900/60 rounded-lg p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <h4 className="font-semibold text-white">Professional Bio</h4>
-                  </div>
+                {/* Professional Bio */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Professional Biography
+                  </label>
                   <textarea
-                    value={profileData.detailedBio || ''}
-                    onChange={(e) => updateProfileData('detailedBio', e.target.value)}
-                    rows={6}
-                    className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Write a detailed professional biography, your approach to patient care, areas of expertise, research interests, etc."
+                    value={profileData.bio || ''}
+                    onChange={(e) => updateProfileData('bio', e.target.value)}
+                    rows={8}
+                    className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Write a detailed professional biography including your medical background, areas of expertise, approach to patient care, research interests, achievements, and any other relevant professional information..."
                   />
-                </div>
-
-                {/* Treatment Notes */}
-                <div className="bg-slate-900/60 rounded-lg p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    <h4 className="font-semibold text-white">Treatment Templates</h4>
-                  </div>
-                  <p className="text-slate-400 text-sm mb-4">Create treatment note templates for common conditions</p>
-                  <div className="space-y-3">
-                    <button className="w-full p-3 bg-slate-800 border border-slate-600 rounded-lg text-left text-slate-300 hover:border-slate-500 transition-colors">
-                      + Add Treatment Template
-                    </button>
-                  </div>
-                </div>
-
-                {/* Prescription Templates */}
-                <div className="bg-slate-900/60 rounded-lg p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                    </svg>
-                    <h4 className="font-semibold text-white">Prescription Templates</h4>
-                  </div>
-                  <p className="text-slate-400 text-sm mb-4">Create prescription templates for common medications</p>
-                  <div className="space-y-3">
-                    <button className="w-full p-3 bg-slate-800 border border-slate-600 rounded-lg text-left text-slate-300 hover:border-slate-500 transition-colors">
-                      + Add Prescription Template
-                    </button>
-                  </div>
+                  <p className="text-xs text-slate-500 mt-1">This will be visible to patients when they view your profile</p>
                 </div>
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-700">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-slate-400">
-                    🧠 Enables advanced patient management and analytics
+                    🩺 Enables advanced patient management and professional verification
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -647,7 +693,7 @@ export default function DoctorProfile() {
                     disabled={isLoading}
                     className="px-6 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                   >
-                    {isLoading ? 'Saving...' : profileExists.advanced ? 'Update Advanced Data' : 'Save Advanced Data'}
+                    {isLoading ? 'Saving...' : profileExists.advanced ? 'Update Professional Data' : 'Save Professional Data'}
                   </motion.button>
                 </div>
               </div>
@@ -655,6 +701,35 @@ export default function DoctorProfile() {
           </motion.div>
         )}
       </div>
+
+      {/* License Upload Modal */}
+      <Dialog.Root open={showUploadModal} onOpenChange={setShowUploadModal}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+          <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-slate-700 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <Dialog.Title className="text-xl font-bold text-white mb-4">
+              Upload Medical License
+            </Dialog.Title>
+            <Dialog.Description className="text-slate-400 mb-6">
+              Upload your medical license document for professional verification
+            </Dialog.Description>
+
+            {/* File Upload Component */}
+            <FileUpload onUpload={handleUploadLicense} isUploading={isUploading} />
+
+            {/* Cancel Button */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowUploadModal(false)}
+              disabled={isUploading}
+              className="w-full bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 text-white font-semibold py-3 rounded-lg transition-colors mt-4"
+            >
+              Cancel
+            </motion.button>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   )
 }
