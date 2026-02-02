@@ -84,7 +84,12 @@ export default function ProfileCompletionCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="profile-completion-card-enhanced relative bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-xl p-6 hover-lift overflow-hidden backdrop-blur-sm"
+      whileHover={{ 
+        scale: 1.02,
+        y: -5,
+        transition: { duration: 0.3 }
+      }}
+      className="profile-completion-card-enhanced relative bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-xl p-6 hover-lift overflow-hidden backdrop-blur-sm cursor-pointer"
       style={{
         background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1))',
         backdropFilter: 'blur(20px)',
@@ -103,10 +108,10 @@ export default function ProfileCompletionCard({
           y: ['-150%', '150%'],
         }}
         transition={{
-          duration: 3,
+          duration: 2.8,
           repeat: Infinity,
           ease: "easeInOut",
-          repeatDelay: 0.5
+          repeatDelay: 0.8
         }}
       />
       
@@ -217,7 +222,15 @@ export default function ProfileCompletionCard({
                   repeatDelay: 2
                 }}
               />
-              <span className="relative z-10 drop-shadow-sm">{getButtonText()}</span>
+              <span className="relative z-10 drop-shadow-sm flex items-center gap-2">
+                {getButtonText()}
+                <motion.span
+                  animate={{ x: [0, 3, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  →
+                </motion.span>
+              </span>
             </motion.button>
           </div>
         </div>
