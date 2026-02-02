@@ -178,6 +178,10 @@ function getSectionVisibility(profileLevel: number, _role: string) {
       visible: profileLevel >= 3,
       message: profileLevel < 3 ? "Complete advanced profile to access AI insights" : null
     },
+    messages: {
+      visible: profileLevel >= 1,
+      message: profileLevel < 1 ? "Complete basic profile to access secure messaging" : null
+    },
     appointments: {
       visible: profileLevel >= 1,
       message: profileLevel < 1 ? baseMessage : null

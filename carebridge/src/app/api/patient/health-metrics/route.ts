@@ -1,20 +1,137 @@
-// TEMPORARILY COMMENTED OUT - Missing database models
-// These routes will be enabled once the required database models are added
-
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth, handleMiddlewareError } from '@/lib/middleware'
+import { prisma } from '@/lib/prisma'
 
-export async function GET(_request: NextRequest) {
-  return NextResponse.json(
-    { error: 'Health metrics API temporarily unavailable' },
-    { status: 503 }
-  )
-}
+// GET /api/patient/health-metrics - Get health metrics for the patient
+export async function GET(request: NextRequest) {
+  try {
+    const user = await requireAuth(request)
 
-export async function POST(_request: NextRequest) {
-  return NextResponse.json(
-    { error: 'Health metrics API temporarily unavailable' },
-    { status: 503 }
-  )
+    if (user.role !== 'PATIENT') {
+      return NextResponse.json(
+        { error: 'Access denied. Patient role required.' },
+        { status: 403 }
+      )
+    }
+
+    // Check if user has Level 3 profile to access health metrics
+    const userData = await prisma.user.findUnique({
+      where: { id: user.userId },
+      select: { profileLevel: true }
+    })
+
+    if (!userData || userData.profileLevel < 3) {
+      return NextResponse.json(
+        { error: 'Complete advanced profile to access health metrics' },
+        { status: 403 }
+      )
+    }
+
+    // Get patient profile with vitals data
+    const patientProfile = await prisma.patientProfile.findUnique({
+      where: { userId: user.userId },
+      select: {
+        vitalsBp: true,
+        vitalsSugar: true,
+        vitalsHeartRate: true,
+        vitalsOxygen: true,
+        updatedAt: true
+      }
+    })
+
+    if (!patientProfile) {
+      return NextResponse.json(
+        { error: 'Patient profile not found' },
+        { status: 404 }
+      )
+    }
+
+    // Format the vitals data as health metrics
+    const metrics = []
+    
+    if (patientProfile.vitalsBp) {
+      // Parse blood pressure (e.g., "120/80")
+      const bpMatch = patientProfile.vitalsBp.match(/(\d+)\/(\d+)/)
+      let status = 'normal'
+      if (bpMatch) {
+        const systolic = parseInt(bpMatch[1])
+        const diastolic = parseInt(bpMatch[2])
+        if (systolic >= 140 || diastolic >= 90) status = 'high'
+        else if (systolic < 90 || diastolic < 60) status = 'low'
+      }
+
+      metrics.push({
+        id: 'bp',
+        type: 'Blood Pressure',
+        value: patientProfile.vitalsBp,
+        unit: 'mmHg',
+        recordedAt: patientProfile.updatedAt,
+        status
+      })
+    }
+
+    if (patientProfile.vitalsSugar) {
+      // Parse blood sugar value
+      const sugarMatch = patientProfile.vitalsSugar.match(/(\d+)/)
+      let status = 'normal'
+      if (sugarMatch) {
+        const sugar = parseInt(sugarMatch[1])
+        if (sugar >= 126) status = 'high'
+        else if (sugar < 70) status = 'low'
+      }
+
+      metrics.push({
+        id: 'sugar',
+        type: 'Blood Sugar',
+        value: patientProfile.vitalsSugar,
+        unit: '',
+        recordedAt: patientProfile.updatedAt,
+        status
+      })
+    }
+
+    if (patientProfile.vitalsHeartRate) {
+      const heartRate = patientProfile.vitalsHeartRate
+      let status = 'normal'
+      if (heartRate > 100) status = 'high'
+      else if (heartRate < 60) status = 'low'
+
+      metrics.push({
+        id: 'heart_rate',
+        type: 'Heart Rate',
+        value: heartRate.toString(),
+        unit: 'BPM',
+        recordedAt: patientProfile.updatedAt,
+        status
+      })
+    }
+
+    if (patientProfile.vitalsOxygen) {
+      const oxygen = patientProfile.vitalsOxygen
+      let status = 'normal'
+      if (oxygen < 95) status = 'low'
+      else if (oxygen > 100) status = 'high' // Though this is rare
+
+      metrics.push({
+        id: 'oxygen',
+        type: 'Oxygen Saturation',
+        value: oxygen.toString(),
+        unit: '%',
+        recordedAt: patientProfile.updatedAt,
+        status
+      })
+    }
+
+    return NextResponse.json({
+      success: true,
+      metrics,
+      lastUpdated: patientProfile.updatedAt
+    })
+
+  } catch (error) {
+    console.error('Get health metrics error:', error)
+    return handleMiddlewareError(error)
+  }
 }
 
 /*

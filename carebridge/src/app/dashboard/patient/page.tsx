@@ -28,6 +28,8 @@ export default function PatientDashboard() {
   const [mounted, setMounted] = useState(false)
   const [records, setRecords] = useState<any[]>([])
   const [recordsLoading, setRecordsLoading] = useState(false)
+  const [healthMetrics, setHealthMetrics] = useState<any[]>([])
+  const [metricsLoading, setMetricsLoading] = useState(false)
   const router = useRouter()
 
   // File upload hook
@@ -61,6 +63,13 @@ export default function PatientDashboard() {
   useEffect(() => {
     if (dashboardData && dashboardData.profileLevel >= 1) {
       fetchRecords()
+    }
+  }, [dashboardData])
+
+  // Fetch health metrics when user has Level 3 profile
+  useEffect(() => {
+    if (dashboardData && dashboardData.profileLevel >= 3) {
+      fetchHealthMetrics()
     }
   }, [dashboardData])
 
@@ -130,6 +139,39 @@ export default function PatientDashboard() {
       setRecords([])
     } finally {
       setRecordsLoading(false)
+    }
+  }
+
+  const fetchHealthMetrics = async () => {
+    setMetricsLoading(true)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        console.error('No token found')
+        return
+      }
+
+      const response = await fetch('/api/patient/health-metrics', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setHealthMetrics(data.metrics || [])
+      } else if (response.status === 403) {
+        console.log('Health metrics access requires Level 3 profile')
+        setHealthMetrics([])
+      } else {
+        console.error('Failed to fetch health metrics:', response.statusText)
+        setHealthMetrics([])
+      }
+    } catch (error) {
+      console.error('Error fetching health metrics:', error)
+      setHealthMetrics([])
+    } finally {
+      setMetricsLoading(false)
     }
   }
 
@@ -420,33 +462,66 @@ export default function PatientDashboard() {
                             <span className="text-emerald-400">💚</span>
                           </div>
                           <h3 className="text-lg font-semibold text-white">Your latest health metrics</h3>
+                          {metricsLoading && (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500"></div>
+                          )}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-1">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm text-slate-400">Blood Pressure</span>
-                              <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
-                            </div>
-                            <p className="text-lg font-semibold text-slate-400">No data</p>
+                        {metricsLoading ? (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {[1, 2, 3].map((i) => (
+                              <div key={i} className="bg-slate-900/60 rounded-lg p-4 animate-pulse">
+                                <div className="h-4 bg-slate-700 rounded mb-2"></div>
+                                <div className="h-6 bg-slate-700 rounded"></div>
+                              </div>
+                            ))}
                           </div>
-
-                          <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-2">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm text-slate-400">Heart Rate</span>
-                              <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
-                            </div>
-                            <p className="text-lg font-semibold text-slate-400">No data</p>
+                        ) : healthMetrics.length > 0 ? (
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            {healthMetrics.map((metric, index) => (
+                              <div key={metric.id} className={`bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-${index + 1}`}>
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm text-slate-400">{metric.type}</span>
+                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    metric.status === 'normal' ? 'bg-green-500/20 text-green-400' :
+                                    metric.status === 'high' ? 'bg-red-500/20 text-red-400' :
+                                    metric.status === 'low' ? 'bg-yellow-500/20 text-yellow-400' :
+                                    'bg-slate-500/20 text-slate-400'
+                                  }`}>
+                                    {metric.status === 'normal' ? 'Healthy Range' :
+                                     metric.status === 'high' ? 'Above Normal' :
+                                     metric.status === 'low' ? 'Below Normal' :
+                                     'No Status'}
+                                  </div>
+                                </div>
+                                <p className="text-lg font-semibold text-white">
+                                  {metric.value} {metric.unit}
+                                </p>
+                                <p className="text-xs text-slate-500 mt-1">
+                                  Updated {new Date(metric.recordedAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            ))}
                           </div>
-
-                          <div className="bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-3">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm text-slate-400">Last Checkup</span>
-                              <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
+                        ) : (
+                          <div className="text-center py-8">
+                            <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                              <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                              </svg>
                             </div>
-                            <p className="text-lg font-semibold text-slate-400">No data</p>
+                            <h4 className="font-medium text-white mb-2">No Health Metrics Yet</h4>
+                            <p className="text-slate-400 text-sm mb-4">Complete your advanced profile to add vital signs</p>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => router.push('/dashboard/patient/profile')}
+                              className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                            >
+                              Add Vitals
+                            </motion.button>
                           </div>
-                        </div>
+                        )}
                       </div>
                     ) : (
                       <SectionLock
