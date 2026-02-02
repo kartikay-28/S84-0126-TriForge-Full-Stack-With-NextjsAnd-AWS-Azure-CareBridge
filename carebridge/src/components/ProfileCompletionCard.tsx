@@ -92,15 +92,15 @@ export default function ProfileCompletionCard({
       }}
     >
       {/* Force Animated Gloss Effects - Always show */}
-      {/* Primary Diagonal Gloss */}
+      {/* Primary Diagonal Gloss - Left-top to Right-bottom */}
       <motion.div 
         className="absolute inset-0 pointer-events-none z-0"
         style={{
-          background: 'linear-gradient(45deg, transparent 20%, rgba(255, 255, 255, 0.6) 50%, transparent 80%)',
+          background: 'linear-gradient(135deg, transparent 20%, rgba(255, 255, 255, 0.6) 50%, transparent 80%)',
         }}
         animate={{
-          x: ['-200%', '200%'],
-          y: ['-200%', '200%'],
+          x: ['-150%', '150%'],
+          y: ['-150%', '150%'],
         }}
         transition={{
           duration: 3,
@@ -150,20 +150,22 @@ export default function ProfileCompletionCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="icon-container w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center border border-white/20 relative overflow-hidden backdrop-blur-sm">
-              {/* Icon Rotating Gloss */}
+              {/* Icon Diagonal Gloss - Better looking than rotation */}
               <motion.div 
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  background: 'linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
+                  background: 'linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
                 }}
                 animate={{
-                  rotate: [0, 360],
+                  x: ['-120%', '120%'],
+                  y: ['-120%', '120%'],
                 }}
                 transition={{
                   duration: 2,
                   repeat: Infinity,
-                  ease: "linear",
-                  delay: 0.5
+                  ease: "easeInOut",
+                  delay: 0.5,
+                  repeatDelay: 1
                 }}
               />
               <div className="relative z-10">
