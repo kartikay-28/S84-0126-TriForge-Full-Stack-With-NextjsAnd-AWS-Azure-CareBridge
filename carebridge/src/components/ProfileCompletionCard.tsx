@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 interface ProfileCompletionCardProps {
   userType: 'patient' | 'doctor'
@@ -15,6 +16,14 @@ export default function ProfileCompletionCard({
   onComplete 
 }: ProfileCompletionCardProps) {
   const router = useRouter()
+  const [animationsEnabled, setAnimationsEnabled] = useState(true)
+
+  useEffect(() => {
+    // Check if animations are supported and enabled
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const supportsAnimation = CSS.supports('animation', 'test 1s ease')
+    setAnimationsEnabled(!prefersReducedMotion && supportsAnimation)
+  }, [])
 
   const handleComplete = () => {
     if (onComplete) {
@@ -73,21 +82,91 @@ export default function ProfileCompletionCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="profile-completion-card relative bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-xl p-6 hover-lift overflow-hidden backdrop-blur-sm"
+      className={`profile-completion-card relative bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-xl p-6 hover-lift overflow-hidden ${
+        animationsEnabled ? 'backdrop-blur-sm' : 'bg-slate-800/50'
+      }`}
+      style={{
+        // Fallback styles for browsers that don't support backdrop-filter
+        background: animationsEnabled 
+          ? undefined 
+          : 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1))'
+      }}
     >
-      {/* Animated Gloss Effect - Diagonal Movement */}
-      <div className="gloss-sweep absolute inset-0 pointer-events-none" />
-      
-      {/* Secondary Shimmer Effect */}
-      <div className="shimmer-sweep absolute inset-0 pointer-events-none opacity-60" />
+      {/* Animated Gloss Effects - Only show if animations are enabled */}
+      {animationsEnabled && (
+        <>
+          {/* Primary Gloss Effect */}
+          <motion.div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'linear-gradient(45deg, transparent 20%, rgba(255, 255, 255, 0.6) 50%, transparent 80%)',
+              transform: 'translateX(-120%) translateY(-120%) rotate(45deg)',
+            }}
+            animate={{
+              transform: [
+                'translateX(-120%) translateY(-120%) rotate(45deg)',
+                'translateX(120%) translateY(120%) rotate(45deg)'
+              ],
+              opacity: [0, 1, 1, 0]
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut",
+              times: [0, 0.15, 0.85, 1]
+            }}
+          />
+          
+          {/* Secondary Shimmer Effect */}
+          <motion.div 
+            className="absolute inset-0 pointer-events-none opacity-60"
+            style={{
+              background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)',
+              transform: 'translateX(-120%)',
+            }}
+            animate={{
+              transform: ['translateX(-120%)', 'translateX(120%)'],
+              opacity: [0, 1, 1, 0]
+            }}
+            transition={{
+              duration: 2.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 1,
+              times: [0, 0.15, 0.85, 1]
+            }}
+          />
+        </>
+      )}
       
       {/* Content */}
       <div className="relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="icon-container w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center border border-white/20 relative overflow-hidden backdrop-blur-sm">
+            <div className={`icon-container w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center border border-white/20 relative overflow-hidden ${
+              animationsEnabled ? 'backdrop-blur-sm' : ''
+            }`}>
               {/* Icon gloss effect */}
-              <div className="icon-gloss absolute inset-0 pointer-events-none" />
+              {animationsEnabled && (
+                <motion.div 
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.7), transparent)',
+                    transform: 'translateX(-120%) rotate(45deg)',
+                  }}
+                  animate={{
+                    transform: ['translateX(-120%) rotate(45deg)', 'translateX(120%) rotate(45deg)'],
+                    opacity: [0, 1, 1, 0]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.5,
+                    times: [0, 0.25, 0.75, 1]
+                  }}
+                />
+              )}
               <div className="relative z-10">
                 {getIcon()}
               </div>
@@ -108,16 +187,39 @@ export default function ProfileCompletionCard({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleComplete}
-              className="button-glass relative px-4 py-2 bg-emerald-500/80 hover:bg-emerald-600/80 text-white font-medium rounded-lg transition-colors border border-white/20 overflow-hidden backdrop-blur-sm"
+              className={`button-glass relative px-4 py-2 bg-emerald-500/80 hover:bg-emerald-600/80 text-white font-medium rounded-lg transition-colors border border-white/20 overflow-hidden ${
+                animationsEnabled ? 'backdrop-blur-sm' : ''
+              }`}
             >
               {/* Button gloss effect */}
-              <div className="button-gloss absolute inset-0 pointer-events-none" />
+              {animationsEnabled && (
+                <motion.div 
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(110deg, transparent, rgba(255, 255, 255, 0.8), transparent)',
+                    transform: 'translateX(-120%) skewX(-15deg)',
+                  }}
+                  animate={{
+                    transform: ['translateX(-120%) skewX(-15deg)', 'translateX(220%) skewX(-15deg)'],
+                    opacity: [0, 1, 1, 0]
+                  }}
+                  transition={{
+                    duration: 1.8,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 1.2,
+                    times: [0, 0.25, 0.75, 1]
+                  }}
+                />
+              )}
               <span className="relative z-10 drop-shadow-sm">{getButtonText()}</span>
             </motion.button>
           </div>
         </div>
         <div className="mt-4">
-          <div className="w-full bg-slate-700/30 rounded-full h-2 border border-white/10 overflow-hidden backdrop-blur-sm">
+          <div className={`w-full bg-slate-700/30 rounded-full h-2 border border-white/10 overflow-hidden ${
+            animationsEnabled ? 'backdrop-blur-sm' : ''
+          }`}>
             <motion.div
               className={`progress-bar h-2 rounded-full ${getProgressColor()} relative overflow-hidden`}
               initial={{ width: 0 }}
@@ -125,7 +227,26 @@ export default function ProfileCompletionCard({
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
               {/* Progress bar gloss effect */}
-              <div className="progress-gloss absolute inset-0 pointer-events-none" />
+              {animationsEnabled && (
+                <motion.div 
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.6))',
+                    transform: 'translateX(-120%)',
+                  }}
+                  animate={{
+                    transform: ['translateX(-120%)', 'translateX(120%)'],
+                    opacity: [0, 1, 1, 0]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 1.8,
+                    times: [0, 0.25, 0.75, 1]
+                  }}
+                />
+              )}
             </motion.div>
           </div>
           <div className="flex justify-between mt-2 text-xs text-slate-400">

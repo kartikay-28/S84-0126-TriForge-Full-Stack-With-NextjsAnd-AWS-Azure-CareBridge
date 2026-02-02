@@ -1984,3 +1984,138 @@ html {
 .dark .navbar-scrolled .text-slate-400 {
   color: #cbd5e1 !important;
 }
+/* Enhanced Browser Compatibility for Profile Completion Card */
+
+/* Fallback for browsers that don't support backdrop-filter */
+@supports not (backdrop-filter: blur(10px)) {
+  .profile-completion-card {
+    background: rgba(30, 41, 59, 0.9) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  }
+  
+  .icon-container {
+    background: rgba(16, 185, 129, 0.3) !important;
+  }
+  
+  .button-glass {
+    background: rgba(16, 185, 129, 0.9) !important;
+  }
+}
+
+/* Ensure animations work across different browsers */
+@-webkit-keyframes glossSweepDiagonal {
+  0% {
+    -webkit-transform: translateX(-120%) translateY(-120%) rotate(45deg);
+    transform: translateX(-120%) translateY(-120%) rotate(45deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    -webkit-transform: translateX(120%) translateY(120%) rotate(45deg);
+    transform: translateX(120%) translateY(120%) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+@-webkit-keyframes shimmerSweepHorizontal {
+  0% {
+    -webkit-transform: translateX(-120%);
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    -webkit-transform: translateX(120%);
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+/* Force hardware acceleration for better performance */
+.profile-completion-card,
+.profile-completion-card * {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+}
+
+/* Ensure animations are visible in different browsers */
+.gloss-sweep,
+.shimmer-sweep,
+.icon-gloss,
+.button-gloss,
+.progress-gloss {
+  will-change: transform, opacity;
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+}
+
+/* Alternative animation approach for older browsers */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .profile-completion-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, transparent 20%, rgba(255, 255, 255, 0.3) 50%, transparent 80%);
+    animation: slideGloss 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+@keyframes slideGloss {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: -100%; }
+}
+
+/* Ensure proper stacking context */
+.profile-completion-card {
+  isolation: isolate;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .profile-completion-card {
+    border: 2px solid #10b981 !important;
+    background: rgba(0, 0, 0, 0.9) !important;
+  }
+  
+  .profile-completion-card .text-white {
+    color: #ffffff !important;
+  }
+  
+  .profile-completion-card .text-slate-400 {
+    color: #cbd5e1 !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .profile-completion-card {
+    background: white !important;
+    color: black !important;
+    border: 1px solid black !important;
+  }
+  
+  .profile-completion-card * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
