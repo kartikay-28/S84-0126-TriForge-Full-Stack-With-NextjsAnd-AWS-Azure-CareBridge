@@ -1,31 +1,41 @@
-    # 1. Builder stage
-    FROM node:20-bullseye AS builder
-    WORKDIR /app
-    COPY carebridge/package*.json ./
-    RUN npm install
-    COPY carebridge/ .
-    RUN npx prisma generate
-    RUN npm run build
+# ---------- Builder Stage ----------
+FROM node:20-bullseye AS builder
 
-    # 2. Production stage
-    FROM node:20-bullseye-slim AS production
-    WORKDIR /app
-    ENV NODE_ENV=production
+WORKDIR /app
 
-    # Create a non-root user
-    RUN addgroup --system --gid 1001 nodejs
-    RUN adduser --system --uid 1001 nextjs
+# Copy full project first (so prisma/schema.prisma exists)
+COPY carebridge/ .
 
-    # Copy production dependencies and built app from builder stage
-    COPY --from=builder /app/package*.json ./
-    RUN npm ci --omit=dev
-    COPY --from=builder /app/.next ./.next
-    COPY --from=builder /app/public ./public
-    COPY --from=builder /app/node_modules/.prisma ./.prisma
+# Then install deps
+RUN npm install
 
-    # Change ownership and switch to non-root user
-    RUN chown -R nextjs:nodejs /app
-    USER nextjs
+# Generate prisma client
+RUN npx prisma generate
 
-    EXPOSE 3000
-    CMD ["npm", "run", "start"]
+# Build Next app
+RUN npm run build
+
+
+# ---------- Production Stage ----------
+FROM node:20-bullseye-slim AS production
+
+WORKDIR /app
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/prisma ./prisma
+RUN npm ci --omit=dev
+
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/node_modules/.prisma ./.prisma
+
+RUN chown -R nextjs:nodejs /app
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start"]
