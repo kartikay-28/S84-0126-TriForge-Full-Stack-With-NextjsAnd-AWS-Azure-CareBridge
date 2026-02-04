@@ -8,6 +8,52 @@ export interface UploadedFile {
   fileUrl: string
 }
 
+export async function handleFileUploadToBlob(request: NextRequest): Promise<{
+  files: UploadedFile[]
+  fields: Record<string, string>
+}> {
+  try {
+    const formData = await request.formData()
+    const files: UploadedFile[] = []
+    const fields: Record<string, string> = {}
+
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        const file = value as File
+        
+        // Generate unique filename
+        const timestamp = Date.now()
+        const randomString = Math.random().toString(36).substring(2, 15)
+        const fileExtension = file.name.split('.').pop() || ''
+        const fileName = `${timestamp}-${randomString}.${fileExtension}`
+
+        // Always use Vercel Blob
+        const { put } = await import('@vercel/blob')
+        const blob = await put(fileName, file, {
+          access: 'public',
+          addRandomSuffix: false
+        })
+
+        files.push({
+          fileName,
+          originalName: file.name,
+          mimeType: file.type,
+          size: file.size,
+          fileUrl: blob.url
+        })
+      } else {
+        // Handle form fields
+        fields[key] = value.toString()
+      }
+    }
+
+    return { files, fields }
+  } catch (error) {
+    console.error('File upload error:', error)
+    throw new Error('Failed to process file upload: ' + (error instanceof Error ? error.message : 'Unknown error'))
+  }
+}
+
 export async function handleFileUpload(request: NextRequest, uploadDir: string = 'medical-records'): Promise<{
   files: UploadedFile[]
   fields: Record<string, string>

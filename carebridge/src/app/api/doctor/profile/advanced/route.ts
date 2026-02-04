@@ -15,14 +15,6 @@ export async function GET(request: NextRequest) {
       where: { userId: user.userId }
     })
 
-    // Convert old /api/files/ URLs to /uploads/ for backward compatibility
-    if (doctorProfile?.licenseDocument && doctorProfile.licenseDocument.startsWith('/api/files/')) {
-      doctorProfile.licenseDocument = doctorProfile.licenseDocument.replace(
-        '/api/files/',
-        '/uploads/'
-      )
-    }
-
     return NextResponse.json({
       profile: doctorProfile,
       exists: !!doctorProfile
