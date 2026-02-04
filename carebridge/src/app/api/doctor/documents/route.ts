@@ -49,8 +49,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create secure file URL for doctor documents
-    const secureFileUrl = `/api/files/doctor-documents/${user.userId}/${file.fileName}`
+    // Create file URL using public uploads path (same as patient records)
+    // This allows direct browser access without authentication
+    const fileUrl = `/uploads/doctor-documents/${user.userId}/${file.fileName}`
 
     // Return the upload result
     const result = {
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
         recordType,
         fileName: file.fileName,
         fileSize: file.size,
-        fileUrl: secureFileUrl,
+        fileUrl: fileUrl,
         uploadedAt: new Date().toISOString()
       }
     }
