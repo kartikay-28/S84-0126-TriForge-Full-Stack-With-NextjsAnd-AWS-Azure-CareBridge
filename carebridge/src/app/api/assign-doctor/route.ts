@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate doctor exists and has profile level >= 1
+    // Validate doctor exists and has profile level = 3 (100% completed profile)
     const doctor = await prisma.user.findUnique({
       where: {
         id: doctorId,
@@ -51,9 +51,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (doctor.profileLevel < 1) {
+    if (doctor.profileLevel < 3) {
       return NextResponse.json(
-        { error: 'Doctor profile is incomplete. Please choose another doctor.' },
+        { error: 'Doctor profile is incomplete. Only doctors with 100% completed profiles can accept patients.' },
         { status: 400 }
       )
     }

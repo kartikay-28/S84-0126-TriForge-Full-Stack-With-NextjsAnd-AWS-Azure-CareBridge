@@ -47,7 +47,11 @@ export async function POST(request: NextRequest) {
         medicalHistory,
         currentMedications,
         emergencyContactName,
-        emergencyContactPhone
+        emergencyContactPhone,
+        emergencyContactRelationship,
+        lifestyleSmoking,
+        lifestyleDrinking,
+        lifestyleExercise
       } = body
 
       // Validate arrays (optional but if provided must be arrays)
@@ -83,7 +87,11 @@ export async function POST(request: NextRequest) {
           medicalHistory: medicalHistory || [],
           currentMedications: currentMedications || [],
           emergencyContactName,
-          emergencyContactPhone
+          emergencyContactPhone,
+          emergencyContactRelationship,
+          lifestyleSmoking,
+          lifestyleDrinking,
+          lifestyleExercise
         }
       })
 

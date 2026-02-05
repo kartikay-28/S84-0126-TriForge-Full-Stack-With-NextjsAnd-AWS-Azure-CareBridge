@@ -10,6 +10,7 @@ import Logo from '@/components/Logo'
 import FileUpload from '@/components/FileUpload'
 import { useFileUpload } from '@/hooks/useFileUpload'
 import { useDashboard } from '@/hooks/useDashboard'
+import { useDoctors } from '@/hooks/useDoctors'
 import ProfileCompletionCard from '@/components/ProfileCompletionCard'
 import SectionLock from '@/components/SectionLock'
 
@@ -30,6 +31,7 @@ export default function PatientDashboard() {
   const [recordsLoading, setRecordsLoading] = useState(false)
   const [healthMetrics, setHealthMetrics] = useState<any[]>([])
   const [metricsLoading, setMetricsLoading] = useState(false)
+  const [showUpdateBanner, setShowUpdateBanner] = useState(false)
   const router = useRouter()
 
   // File upload hook
@@ -38,8 +40,26 @@ export default function PatientDashboard() {
   // Dashboard hook to get profile level and section visibility
   const { dashboardData, isLoading: dashboardLoading } = useDashboard()
 
+  // Doctors hook to get all doctors and recommendations
+  const { 
+    allDoctors, 
+    recommendedDoctors, 
+    isLoadingAll, 
+    isLoadingRecommended, 
+    error: doctorsError,
+    fetchAllDoctors,
+    fetchRecommendedDoctors,
+    assignDoctor
+  } = useDoctors()
+
   useEffect(() => {
     setMounted(true)
+    
+    // Check if user has acknowledged the profile update
+    const acknowledged = localStorage.getItem('profileUpdateAcknowledged')
+    if (!acknowledged) {
+      setShowUpdateBanner(true)
+    }
   }, [])
 
   useEffect(() => {
@@ -264,6 +284,28 @@ export default function PatientDashboard() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setActiveTab('doctors')
+                  if (dashboardData && dashboardData.profileLevel >= 1) {
+                    fetchAllDoctors()
+                    fetchRecommendedDoctors()
+                  }
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'doctors'
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                  }`}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                All Doctors
+              </motion.button>
+            </li>
+            <li>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveTab('access')}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'access'
                   ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
@@ -406,6 +448,33 @@ export default function PatientDashboard() {
 
         {/* Dashboard Content */}
         <main className="flex-1 p-6">
+          {/* Profile Update Banner - Show only if not acknowledged and user has profile */}
+          {showUpdateBanner && dashboardData && dashboardData.profileLevel > 0 && (
+            <div className="mb-6 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/30 rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-white">Profile Updated Successfully!</h3>
+                  <p className="text-xs text-slate-300">Your profile has been updated with the new medical condition system. You can now access all features including doctor recommendations.</p>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    localStorage.setItem('profileUpdateAcknowledged', 'true')
+                    setShowUpdateBanner(false)
+                  }}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Got it!
+                </motion.button>
+              </div>
+            </div>
+          )}
           {activeTab === 'dashboard' && (
             <>
               {dashboardLoading ? (
@@ -912,6 +981,146 @@ export default function PatientDashboard() {
               </div>
             </div>
           )}
+
+          {activeTab === 'doctors' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white">All Doctors</h2>
+                <div className="text-sm text-slate-400">
+                  {allDoctors.length} doctors available
+                </div>
+              </div>
+
+              {dashboardData && dashboardData.profileLevel < 1 ? (
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8 hover-lift">
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-20 h-20 bg-slate-700/50 rounded-full flex items-center justify-center mb-6">
+                      <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-3">Complete Your Profile</h3>
+                    <p className="text-slate-400 mb-6 max-w-md">Please complete your basic profile to view and connect with doctors.</p>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => router.push('/dashboard/patient/profile')}
+                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+                    >
+                      Complete Profile
+                    </motion.button>
+                  </div>
+                </div>
+              ) : (isLoadingAll || isLoadingRecommended) ? (
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8 hover-lift">
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p className="text-slate-400">Loading doctors...</p>
+                  </div>
+                </div>
+              ) : doctorsError ? (
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8 hover-lift">
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mb-6">
+                      <svg className="w-10 h-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-3">Error Loading Doctors</h3>
+                    <p className="text-slate-400 mb-6">{doctorsError}</p>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        fetchAllDoctors()
+                        fetchRecommendedDoctors()
+                      }}
+                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+                    >
+                      Try Again
+                    </motion.button>
+                  </div>
+                </div>
+              ) : allDoctors.length === 0 ? (
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8 hover-lift">
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-20 h-20 bg-slate-700/50 rounded-full flex items-center justify-center mb-6">
+                      <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-3">No Doctors Available</h3>
+                    <p className="text-slate-400 mb-6">No doctors with completed profiles are currently available.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {/* Recommended Doctors Section */}
+                  {recommendedDoctors.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-6 h-6 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-semibold text-white">Recommended for You</h3>
+                        <div className="text-sm text-slate-400">
+                          {recommendedDoctors.length} recommendations
+                        </div>
+                      </div>
+                      <div className="bg-slate-800/30 border border-emerald-500/20 rounded-xl p-4 mb-6">
+                        <p className="text-sm text-slate-300">
+                          <span className="text-emerald-400 font-medium">✨ Personalized matches:</span> These doctors specialize in your medical conditions and are available to accept new patients.
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        {recommendedDoctors.map((doctor, index) => (
+                          <DoctorCard 
+                            key={doctor.doctorId} 
+                            doctor={doctor} 
+                            onAssign={assignDoctor}
+                            index={index}
+                            isRecommended={true}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* All Doctors Section */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-6 h-6 bg-slate-500/20 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-white">All Available Doctors</h3>
+                      <div className="text-sm text-slate-400">
+                        {allDoctors.length} doctors
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {allDoctors.map((doctor, index) => {
+                        // Check if this doctor is in the recommended list
+                        const isRecommended = recommendedDoctors.some(rec => rec.doctorId === doctor.doctorId)
+                        return (
+                          <DoctorCard 
+                            key={doctor.doctorId} 
+                            doctor={doctor} 
+                            onAssign={assignDoctor}
+                            index={index + recommendedDoctors.length}
+                            isRecommended={isRecommended}
+                          />
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </main>
 
         {/* Grant Access Modal */}
@@ -1003,5 +1212,148 @@ export default function PatientDashboard() {
         </Dialog.Root>
       </div>
     </div>
+  )
+}
+
+// Doctor Card Component
+interface DoctorCardProps {
+  doctor: {
+    doctorId: string
+    name: string
+    degree: string | null
+    specialization: string
+    yearsOfExperience: number
+    hospital: string | null
+    consultationMode: string | null
+    availability: string | null
+    isCurrentlyAssigned: boolean
+    matchReason?: string
+  }
+  onAssign: (doctorId: string) => Promise<any>
+  index: number
+  isRecommended?: boolean
+}
+
+function DoctorCard({ doctor, onAssign, index, isRecommended = false }: DoctorCardProps) {
+  const [isAssigning, setIsAssigning] = useState(false)
+
+  const handleAssign = async () => {
+    if (doctor.isCurrentlyAssigned) return
+    
+    setIsAssigning(true)
+    try {
+      await onAssign(doctor.doctorId)
+      alert(`Successfully assigned to Dr. ${doctor.name}!`)
+    } catch (error) {
+      alert(`Failed to assign doctor: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsAssigning(false)
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+      className={`bg-slate-800/50 border rounded-xl p-6 hover-lift ${
+        isRecommended 
+          ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-slate-800/50' 
+          : 'border-slate-700/50'
+      }`}
+    >
+      {isRecommended && (
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-6 h-6 bg-emerald-500/20 rounded-full flex items-center justify-center">
+            <svg className="w-3 h-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          </div>
+          <span className="text-xs font-medium text-emerald-400">RECOMMENDED</span>
+        </div>
+      )}
+
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start gap-3">
+          <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center">
+            <span className="text-emerald-400 font-bold text-lg">
+              {doctor.name.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div>
+            <h4 className="font-semibold text-white mb-1">
+              Dr. {doctor.name}
+              {doctor.degree && (
+                <span className="text-slate-400 text-sm font-normal ml-2">
+                  {doctor.degree}
+                </span>
+              )}
+            </h4>
+            <p className="text-emerald-400 text-sm font-medium">{doctor.specialization}</p>
+          </div>
+        </div>
+        
+        {doctor.isCurrentlyAssigned && (
+          <div className="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-full">
+            Assigned
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-2 mb-4">
+        <div className="flex items-center gap-2 text-sm text-slate-300">
+          <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{doctor.yearsOfExperience} years experience</span>
+        </div>
+        
+        {doctor.hospital && (
+          <div className="flex items-center gap-2 text-sm text-slate-300">
+            <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h4M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <span>{doctor.hospital}</span>
+          </div>
+        )}
+        
+        {doctor.consultationMode && (
+          <div className="flex items-center gap-2 text-sm text-slate-300">
+            <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <span>{doctor.consultationMode.replace('_', ' ')}</span>
+          </div>
+        )}
+      </div>
+
+      {doctor.matchReason && (
+        <div className="mb-4 p-3 bg-slate-900/60 rounded-lg">
+          <p className="text-xs text-slate-400 mb-1">Why recommended:</p>
+          <p className="text-sm text-slate-300">{doctor.matchReason}</p>
+        </div>
+      )}
+
+      <motion.button
+        whileHover={{ scale: doctor.isCurrentlyAssigned ? 1 : 1.02 }}
+        whileTap={{ scale: doctor.isCurrentlyAssigned ? 1 : 0.98 }}
+        onClick={handleAssign}
+        disabled={doctor.isCurrentlyAssigned || isAssigning}
+        className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+          doctor.isCurrentlyAssigned
+            ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+            : isAssigning
+            ? 'bg-emerald-600 text-white cursor-wait'
+            : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+        }`}
+      >
+        {doctor.isCurrentlyAssigned 
+          ? 'Already Assigned' 
+          : isAssigning 
+          ? 'Assigning...' 
+          : 'Assign Doctor'
+        }
+      </motion.button>
+    </motion.div>
   )
 }

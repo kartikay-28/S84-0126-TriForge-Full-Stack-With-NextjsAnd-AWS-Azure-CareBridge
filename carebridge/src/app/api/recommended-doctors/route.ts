@@ -45,13 +45,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Query doctors using existing logic pattern from /api/doctors
-    // Find doctors with profile level >= 1 and matching specializations/conditions
+    // Find doctors with profile level = 3 (100% completed profiles only) and matching specializations/conditions
     const recommendedDoctors = await prisma.user.findMany({
       where: {
         role: 'DOCTOR',
-        profileLevel: {
-          gte: 1 // Only doctors with completed basic profiles
-        },
+        profileLevel: 3, // Only doctors with 100% completed profiles
         doctorProfile: {
           OR: buildMatchingConditions(patientConditions)
         }
@@ -125,7 +123,18 @@ function buildMatchingConditions(patientConditions: string[]) {
   const conditions = []
 
   for (const condition of patientConditions) {
+    // Convert enum values to readable text for better matching
+    const readableCondition = convertEnumToReadable(condition)
+    
     // Match against doctor specialization (case-insensitive) - existing pattern
+    conditions.push({
+      specialization: {
+        contains: readableCondition,
+        mode: 'insensitive' as const
+      }
+    })
+
+    // Also try matching with the original enum value
     conditions.push({
       specialization: {
         contains: condition,
@@ -136,12 +145,71 @@ function buildMatchingConditions(patientConditions: string[]) {
     // Match against conditions treated by doctor - existing pattern
     conditions.push({
       conditionsTreated: {
+        hasSome: [readableCondition]
+      }
+    })
+
+    conditions.push({
+      conditionsTreated: {
         hasSome: [condition]
       }
     })
   }
 
+  // Add fallback conditions to show more doctors
+  conditions.push(
+    // General practitioners
+    {
+      specialization: {
+        in: ['General Practice', 'Internal Medicine', 'Family Medicine', 'Primary Care'],
+        mode: 'insensitive' as const
+      }
+    },
+    // Any doctor with a specialization (fallback)
+    {
+      specialization: {
+        not: null
+      }
+    }
+  )
+
   return conditions
+}
+
+/**
+ * Convert enum values to readable text for better doctor matching
+ */
+function convertEnumToReadable(enumValue: string): string {
+  const enumMap: Record<string, string> = {
+    'HEART_DISEASE': 'heart disease',
+    'DIABETES': 'diabetes',
+    'HYPERTENSION': 'hypertension',
+    'ASTHMA': 'asthma',
+    'ARTHRITIS': 'arthritis',
+    'DEPRESSION': 'depression',
+    'ANXIETY': 'anxiety',
+    'SKIN_CONDITIONS': 'dermatology',
+    'DIGESTIVE_ISSUES': 'gastroenterology',
+    'HEADACHES_MIGRAINES': 'neurology',
+    'BACK_PAIN': 'orthopedics',
+    'ALLERGIES': 'allergy',
+    'RESPIRATORY_ISSUES': 'pulmonology',
+    'KIDNEY_DISEASE': 'nephrology',
+    'LIVER_DISEASE': 'hepatology',
+    'THYROID_DISORDERS': 'endocrinology',
+    'CANCER': 'oncology',
+    'NEUROLOGICAL_DISORDERS': 'neurology',
+    'MENTAL_HEALTH': 'psychiatry',
+    'WOMENS_HEALTH': 'gynecology',
+    'MENS_HEALTH': 'urology',
+    'PEDIATRIC_CARE': 'pediatrics',
+    'GERIATRIC_CARE': 'geriatrics',
+    'GENERAL_CHECKUP': 'general practice',
+    'PREVENTIVE_CARE': 'preventive medicine',
+    'OTHER': 'general practice'
+  }
+
+  return enumMap[enumValue] || enumValue.toLowerCase().replace(/_/g, ' ')
 }
 
 /**

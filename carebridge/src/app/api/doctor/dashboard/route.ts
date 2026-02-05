@@ -40,24 +40,24 @@ export async function GET(request: NextRequest) {
     // Define section visibility based on profile level
     const sectionVisibility = {
       patients: {
-        visible: profileLevel >= 1,
-        message: profileLevel < 1 ? "Complete your basic professional information to start accepting patients" : null
+        visible: profileLevel >= 3, // Require 100% completed profile to access patients
+        message: profileLevel < 3 ? "Complete your full professional profile (including consultation fees and license document) to start accepting patients" : null
       },
       messages: {
-        visible: profileLevel >= 2,
-        message: profileLevel < 2 ? "Complete your professional profile to enable messaging with patients" : null
+        visible: profileLevel >= 3, // Require 100% completed profile for messaging
+        message: profileLevel < 3 ? "Complete your full professional profile to enable messaging with patients" : null
       },
       records: {
-        visible: profileLevel >= 1,
-        message: profileLevel < 1 ? "Complete your basic profile to access patient medical records" : null
+        visible: profileLevel >= 3, // Require 100% completed profile to access patient records
+        message: profileLevel < 3 ? "Complete your full professional profile to access patient medical records" : null
       },
       appointments: {
-        visible: profileLevel >= 2,
-        message: profileLevel < 2 ? "Complete your extended profile to manage appointments" : null
+        visible: profileLevel >= 3, // Require 100% completed profile for appointments
+        message: profileLevel < 3 ? "Complete your full professional profile to manage appointments" : null
       },
       analytics: {
         visible: profileLevel >= 3,
-        message: profileLevel < 3 ? "Complete your full profile to access advanced analytics and insights" : null
+        message: profileLevel < 3 ? "Complete your full professional profile to access advanced analytics and insights" : null
       }
     }
 

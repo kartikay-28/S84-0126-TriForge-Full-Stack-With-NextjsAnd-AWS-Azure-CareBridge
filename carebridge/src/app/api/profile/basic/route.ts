@@ -70,6 +70,14 @@ export async function POST(request: NextRequest) {
       // Validate enums
       const validGenders = ['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY']
       const validConsultationPrefs = ['IN_PERSON', 'VIDEO_CALL', 'PHONE_CALL', 'CHAT']
+      const validMedicalConditions = [
+        'HEART_DISEASE', 'DIABETES', 'HYPERTENSION', 'ASTHMA', 'ARTHRITIS',
+        'DEPRESSION', 'ANXIETY', 'SKIN_CONDITIONS', 'DIGESTIVE_ISSUES',
+        'HEADACHES_MIGRAINES', 'BACK_PAIN', 'ALLERGIES', 'RESPIRATORY_ISSUES',
+        'KIDNEY_DISEASE', 'LIVER_DISEASE', 'THYROID_DISORDERS', 'CANCER',
+        'NEUROLOGICAL_DISORDERS', 'MENTAL_HEALTH', 'WOMENS_HEALTH', 'MENS_HEALTH',
+        'PEDIATRIC_CARE', 'GERIATRIC_CARE', 'GENERAL_CHECKUP', 'PREVENTIVE_CARE', 'OTHER'
+      ]
 
       if (!validGenders.includes(gender)) {
         return NextResponse.json(
@@ -81,6 +89,13 @@ export async function POST(request: NextRequest) {
       if (!validConsultationPrefs.includes(consultationPreference)) {
         return NextResponse.json(
           { error: 'Invalid consultation preference' },
+          { status: 400 }
+        )
+      }
+
+      if (!validMedicalConditions.includes(primaryProblem)) {
+        return NextResponse.json(
+          { error: 'Invalid primary problem value' },
           { status: 400 }
         )
       }

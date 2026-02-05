@@ -111,7 +111,12 @@ export default function PatientProfile() {
             emergencyContact: {
               name: profile.emergencyContactName || '',
               phone: profile.emergencyContactPhone || '',
-              relationship: ''
+              relationship: profile.emergencyContactRelationship || ''
+            },
+            lifestyle: {
+              smoking: profile.lifestyleSmoking || '',
+              drinking: profile.lifestyleDrinking || '',
+              exercise: profile.lifestyleExercise || ''
             }
           }))
           setProfileExists(prev => ({ ...prev, recommended: true }))
@@ -169,7 +174,7 @@ export default function PatientProfile() {
       alert('Basic profile saved successfully!')
     } catch (error) {
       console.error('Failed to save basic profile:', error)
-      alert('Failed to save profile. Please try again.')
+      alert(`Failed to save profile: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -179,7 +184,11 @@ export default function PatientProfile() {
         medicalHistory: profileData.medicalHistory ? [profileData.medicalHistory] : [],
         currentMedications: profileData.currentMedications || [],
         emergencyContactName: profileData.emergencyContact?.name,
-        emergencyContactPhone: profileData.emergencyContact?.phone
+        emergencyContactPhone: profileData.emergencyContact?.phone,
+        emergencyContactRelationship: profileData.emergencyContact?.relationship,
+        lifestyleSmoking: profileData.lifestyle?.smoking,
+        lifestyleDrinking: profileData.lifestyle?.drinking,
+        lifestyleExercise: profileData.lifestyle?.exercise
       }
 
       await updateRecommendedProfile(recommendedData)
@@ -364,13 +373,39 @@ export default function PatientProfile() {
                   <label className="block text-sm font-medium text-slate-300 mb-2">
                     Primary Health Concern <span className="text-red-400">*</span>
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={profileData.primaryProblem || ''}
                     onChange={(e) => updateProfileData('primaryProblem', e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    placeholder="e.g., Diabetes management, Heart condition, General checkup"
-                  />
+                    className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  >
+                    <option value="">Select your primary health concern</option>
+                    <option value="HEART_DISEASE">Heart Disease</option>
+                    <option value="DIABETES">Diabetes</option>
+                    <option value="HYPERTENSION">High Blood Pressure</option>
+                    <option value="ASTHMA">Asthma</option>
+                    <option value="ARTHRITIS">Arthritis</option>
+                    <option value="DEPRESSION">Depression</option>
+                    <option value="ANXIETY">Anxiety</option>
+                    <option value="SKIN_CONDITIONS">Skin Conditions</option>
+                    <option value="DIGESTIVE_ISSUES">Digestive Issues</option>
+                    <option value="HEADACHES_MIGRAINES">Headaches/Migraines</option>
+                    <option value="BACK_PAIN">Back Pain</option>
+                    <option value="ALLERGIES">Allergies</option>
+                    <option value="RESPIRATORY_ISSUES">Respiratory Issues</option>
+                    <option value="KIDNEY_DISEASE">Kidney Disease</option>
+                    <option value="LIVER_DISEASE">Liver Disease</option>
+                    <option value="THYROID_DISORDERS">Thyroid Disorders</option>
+                    <option value="CANCER">Cancer</option>
+                    <option value="NEUROLOGICAL_DISORDERS">Neurological Disorders</option>
+                    <option value="MENTAL_HEALTH">Mental Health</option>
+                    <option value="WOMENS_HEALTH">Women's Health</option>
+                    <option value="MENS_HEALTH">Men's Health</option>
+                    <option value="PEDIATRIC_CARE">Pediatric Care</option>
+                    <option value="GERIATRIC_CARE">Geriatric Care</option>
+                    <option value="GENERAL_CHECKUP">General Checkup</option>
+                    <option value="PREVENTIVE_CARE">Preventive Care</option>
+                    <option value="OTHER">Other</option>
+                  </select>
                 </div>
 
                 {/* Symptoms */}
