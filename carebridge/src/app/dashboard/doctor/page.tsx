@@ -25,35 +25,111 @@ export default function DoctorDashboard() {
   const [mounted, setMounted] = useState(false)
   const [assignedPatients, setAssignedPatients] = useState<any[]>([])
   const [patientsLoading, setPatientsLoading] = useState(false)
+  const [selectedPatient, setSelectedPatient] = useState<any>(null)
+  const [doctorMessages, setDoctorMessages] = useState<any[]>([])
+  const [doctorMessagesLoading, setDoctorMessagesLoading] = useState(false)
+  const [doctorMessageInput, setDoctorMessageInput] = useState('')
+  const [doctorMessagesError, setDoctorMessagesError] = useState<string | null>(null)
   const router = useRouter()
 
   // Dashboard hook to get profile level and section visibility
   const { dashboardData, isLoading: dashboardLoading } = useDoctorDashboard()
 
-  // Fetch assigned patients
-  useEffect(() => {
-    const fetchAssignedPatients = async () => {
-      setPatientsLoading(true)
-      try {
-        const token = localStorage.getItem('token')
-        if (!token) return
-        const response = await fetch('/api/doctor/assigned-patients', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        if (!response.ok) {
-          setAssignedPatients([])
-          return
-        }
-        const data = await response.json()
-        setAssignedPatients(data.patients || [])
-      } catch (err) {
+  const fetchAssignedPatients = async () => {
+    setPatientsLoading(true)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      const response = await fetch('/api/doctor/assigned-patients', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) {
         setAssignedPatients([])
-      } finally {
-        setPatientsLoading(false)
+        return
       }
+      const data = await response.json()
+      setAssignedPatients(data.patients || [])
+    } catch (err) {
+      setAssignedPatients([])
+    } finally {
+      setPatientsLoading(false)
     }
-    if (user && user.role === 'DOCTOR') fetchAssignedPatients()
-  }, [user])
+  }
+
+  // Fetch assigned patients on load and when switching tabs
+  useEffect(() => {
+    if (user && user.role === 'DOCTOR') {
+      fetchAssignedPatients()
+    }
+  }, [user, activeTab])
+
+  useEffect(() => {
+    if (!selectedPatient && assignedPatients.length > 0) {
+      setSelectedPatient(assignedPatients[0])
+    }
+  }, [assignedPatients, selectedPatient])
+
+  const fetchDoctorMessages = async () => {
+    if (!selectedPatient) return
+    setDoctorMessagesLoading(true)
+    setDoctorMessagesError(null)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      const response = await fetch(`/api/doctor/messages?patientId=${selectedPatient.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        setDoctorMessagesError(errorData.error || 'Failed to fetch messages')
+        setDoctorMessages([])
+        return
+      }
+      const data = await response.json()
+      setDoctorMessages(data.messages || [])
+    } catch (err) {
+      setDoctorMessagesError('Failed to fetch messages')
+      setDoctorMessages([])
+    } finally {
+      setDoctorMessagesLoading(false)
+    }
+  }
+
+  const handleSendDoctorMessage = async () => {
+    const trimmed = doctorMessageInput.trim()
+    if (!trimmed || !selectedPatient) return
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      setDoctorMessageInput('')
+      const response = await fetch('/api/doctor/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ patientId: selectedPatient.id, content: trimmed })
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        setDoctorMessagesError(errorData.error || 'Failed to send message')
+        return
+      }
+      await fetchDoctorMessages()
+    } catch (err) {
+      setDoctorMessagesError('Failed to send message')
+    }
+  }
+
+  useEffect(() => {
+    if (!selectedPatient) {
+      setDoctorMessages([])
+      return
+    }
+    fetchDoctorMessages()
+    const interval = setInterval(fetchDoctorMessages, 5000)
+    return () => clearInterval(interval)
+  }, [selectedPatient])
 
   useEffect(() => {
     setMounted(true)
@@ -406,8 +482,10 @@ export default function DoctorDashboard() {
                     </div>
                     <h3 className="font-semibold text-white">Active Patients</h3>
                   </div>
-                  <p className="text-2xl font-bold text-white mb-1">0</p>
-                  <p className="text-slate-400 text-sm">With consent granted</p>
+                  <p className="text-2xl font-bold text-white mb-1">
+                    {patientsLoading ? '...' : assignedPatients.length}
+                  </p>
+                  <p className="text-slate-400 text-sm">Assigned to you</p>
                   <button 
                     onClick={() => setActiveTab('patients')}
                     className="mt-3 text-emerald-400 text-sm hover:text-emerald-300 transition-colors"
@@ -484,7 +562,7 @@ export default function DoctorDashboard() {
               {/* Bottom Sections */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 {/* Messages */}
-                <div className="dashboard-card p-6">
+                <div className="dashboard-card messages-card p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="font-semibold text-white">Recent Messages</h3>
                     <button 
@@ -495,15 +573,53 @@ export default function DoctorDashboard() {
                     </button>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
+                  {doctorMessagesLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                      </div>
+                      <h4 className="font-medium text-white mb-2">Loading messages...</h4>
                     </div>
-                    <h4 className="font-medium text-white mb-2">No messages yet</h4>
-                    <p className="text-slate-400 text-sm">Patient messages will appear here</p>
-                  </div>
+                  ) : doctorMessages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                      </div>
+                      <h4 className="font-medium text-white mb-2">No messages yet</h4>
+                      <p className="text-slate-400 text-sm">Patient messages will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {doctorMessages.slice(-3).map((message) => (
+                        <div key={message.id} className="flex items-start gap-3 p-3 bg-slate-900/60 rounded-lg">
+                          <div className="w-9 h-9 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                            <span className="text-emerald-400 text-xs font-semibold">
+                              {message.sentBy === 'DOCTOR'
+                                ? 'ME'
+                                : (selectedPatient?.name?.charAt(0).toUpperCase() || 'P')}
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-slate-300 text-xs mb-1">
+                              {message.sentBy === 'PATIENT'
+                                ? `${selectedPatient?.name || 'Patient'} sent you a message`
+                                : `You to ${selectedPatient?.name || 'patient'}`}
+                            </p>
+                            <p className="text-white text-sm truncate">{message.content}</p>
+                            {message.createdAt && (
+                              <p className="text-slate-400 text-xs mt-1">
+                                {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Patients */}
@@ -518,15 +634,42 @@ export default function DoctorDashboard() {
                     </button>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-                      </svg>
+                  {patientsLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                        </svg>
+                      </div>
+                      <h4 className="font-medium text-white mb-2">Loading patients...</h4>
                     </div>
-                    <h4 className="font-medium text-white mb-2">No patients yet</h4>
-                    <p className="text-slate-400 text-sm">Patients will appear here when they grant you access</p>
-                  </div>
+                  ) : assignedPatients.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                        </svg>
+                      </div>
+                      <h4 className="font-medium text-white mb-2">No patients yet</h4>
+                      <p className="text-slate-400 text-sm">Patients will appear here when they grant you access</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {assignedPatients.slice(0, 3).map(patient => (
+                        <div key={patient.id} className="flex items-center gap-3 p-3 bg-slate-900/60 rounded-lg">
+                          <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                            <span className="text-emerald-400 font-semibold">
+                              {patient.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-white text-sm font-medium truncate">{patient.name}</p>
+                            <p className="text-slate-400 text-xs truncate">{patient.email}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Records */}
@@ -656,55 +799,148 @@ export default function DoctorDashboard() {
           )}
 
           {activeTab === 'messages' && (
-            <div className="space-y-6">
+            <div className="messages-shell space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">Messages</h2>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  New Message
-                </motion.button>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">Messages</h2>
+                  <p className="text-slate-400 text-sm">Coordinate care and follow-ups from one inbox</p>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-300 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  Live updates
+                </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Conversations List */}
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">Conversations</h3>
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
-                    </div>
-                    <h4 className="font-medium text-white mb-2">No conversations yet</h4>
-                    <p className="text-slate-400 text-sm">Start messaging with your patients</p>
+                <div className="messages-panel messages-sidebar bg-slate-900/40 border border-slate-700/50 rounded-2xl p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-white">Patients</h3>
+                    <span className="text-xs text-slate-400">{assignedPatients.length} total</span>
                   </div>
+                  {patientsLoading ? (
+                    <p className="text-slate-400 text-sm">Loading patients...</p>
+                  ) : assignedPatients.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 text-center">
+                      <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                      </div>
+                      <h4 className="font-medium text-white mb-2">No conversations yet</h4>
+                      <p className="text-slate-400 text-sm">Assigned patients will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {assignedPatients.map(patient => (
+                        <button
+                          key={patient.id}
+                          onClick={() => setSelectedPatient(patient)}
+                          className={`w-full text-left p-3 rounded-xl border transition-colors ${selectedPatient?.id === patient.id
+                            ? 'bg-emerald-500/15 border-emerald-500/40'
+                            : 'bg-slate-900/60 border-slate-700/60 hover:bg-slate-900/80'}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                              <span className="text-emerald-300 font-semibold">{patient.name.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-white text-sm font-medium truncate">{patient.name}</p>
+                              <p className="text-slate-400 text-xs truncate">{patient.email}</p>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Message Area */}
-                <div className="md:col-span-2 bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="w-20 h-20 bg-slate-700/50 rounded-full flex items-center justify-center mb-6">
-                      <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2v-6a2 2 0 012-2h2m-4 9h10a2 2 0 002-2V9a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                      </svg>
+                <div className="messages-panel messages-thread lg:col-span-2 bg-slate-900/40 border border-slate-700/50 rounded-2xl overflow-hidden">
+                  {!selectedPatient ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                      <div className="w-20 h-20 bg-slate-700/50 rounded-full flex items-center justify-center mb-6">
+                        <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2v-6a2 2 0 012-2h2m-4 9h10a2 2 0 002-2V9a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-xl font-semibold text-white mb-3">Select a patient to chat</h3>
+                      <p className="text-slate-400 mb-6 max-w-md">Choose a patient from the left to start messaging.</p>
                     </div>
-                    <h3 className="text-xl font-semibold text-white mb-3">No messages available</h3>
-                    <p className="text-slate-400 mb-6 max-w-md">You need patient access to send messages. Request access to patients to start communicating.</p>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowRequestModal(true)}
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-                    >
-                      Request Patient Access
-                    </motion.button>
-                  </div>
+                  ) : (
+                    <div className="flex flex-col h-full">
+                      <div className="messages-header flex items-center justify-between px-6 py-4 border-b border-slate-700/60 bg-slate-900/60">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                            <span className="text-emerald-300 font-semibold">{selectedPatient.name.charAt(0).toUpperCase()}</span>
+                          </div>
+                          <div>
+                            <p className="text-white font-semibold">{selectedPatient.name}</p>
+                            <p className="text-slate-400 text-xs">{selectedPatient.email}</p>
+                          </div>
+                        </div>
+                        <div className="text-xs text-slate-400">Auto-refreshing</div>
+                      </div>
+                      <div className="messages-scroll px-6 py-4 h-[420px] max-h-[420px] overflow-y-auto bg-gradient-to-b from-slate-900/40 to-slate-900/80">
+                        {doctorMessagesLoading && doctorMessages.length === 0 ? (
+                          <p className="text-slate-400 text-sm">Loading messages...</p>
+                        ) : doctorMessages.length === 0 ? (
+                          <div className="text-center py-10">
+                            <p className="text-slate-300">No messages yet. Say hello!</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {doctorMessages.map((msg) => (
+                              <div
+                                key={msg.id}
+                                className={`flex ${msg.sentBy === 'DOCTOR' ? 'justify-end' : 'justify-start'}`}
+                              >
+                                <div className={`message-bubble max-w-[75%] rounded-2xl px-4 py-3 text-sm ${msg.sentBy === 'DOCTOR'
+                                  ? 'message-bubble-out bg-emerald-500/20 text-emerald-100 border border-emerald-500/30'
+                                  : 'message-bubble-in bg-slate-800/80 text-slate-200 border border-slate-700/60'}`}
+                                >
+                                  <p>{msg.content}</p>
+                                  {msg.createdAt && (
+                                    <p className="messages-muted text-[10px] text-slate-400 mt-2">
+                                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {doctorMessagesError && (
+                        <p className="text-rose-400 text-xs px-6 pt-2">{doctorMessagesError}</p>
+                      )}
+                      <div className="messages-header px-6 py-4 border-t border-slate-700/60 bg-slate-900/60">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="text"
+                            value={doctorMessageInput}
+                            onChange={(e) => setDoctorMessageInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault()
+                                handleSendDoctorMessage()
+                              }
+                            }}
+                            placeholder="Type your message..."
+                            className="messages-input flex-1 px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                          <motion.button
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={handleSendDoctorMessage}
+                            className="px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm transition-colors"
+                          >
+                            Send
+                          </motion.button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

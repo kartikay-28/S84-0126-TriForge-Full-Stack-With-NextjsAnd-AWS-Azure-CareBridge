@@ -1,15 +1,133 @@
-
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String          @id @default(cuid())
+  email              String          @unique
+  name               String
+  password           String
+  role               Role
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  profileLevel       Int             @default(0)
+  receivedAccess     AccessGrant[]   @relation("DoctorGrants")
+  grantedAccess      AccessGrant[]   @relation("PatientGrants")
+  doctorAssignments  Assignment[]    @relation("DoctorAssignments")
+  patientAssignments Assignment[]    @relation("PatientAssignments")
+  doctorProfile      DoctorProfile?
+  medicalRecords     MedicalRecord[]
+  patientProfile     PatientProfile?
+  sentMessages       Message[]       @relation("MessageSender")
+  receivedMessages   Message[]       @relation("MessageReceiver")
+  healthMetrics      HealthMetric[]
+
+  @@map("users")
+}
+
+model PatientProfile {
+  id                           String                  @id @default(cuid())
+  userId                       String                  @unique
+  age                          Int?
+  gender                       Gender?
+  symptoms                     String[]
+  consultationPreference       ConsultationPreference?
+  medicalHistory               String[]
+  currentMedications           String[]
+  emergencyContactName         String?
+  emergencyContactPhone        String?
+  vitalsBp                     String?
+  vitalsSugar                  String?
+  vitalsHeartRate              Int?
+  vitalsOxygen                 Int?
+  createdAt                    DateTime                @default(now())
+  updatedAt                    DateTime                @updatedAt
+  primaryProblem               MedicalCondition?
+  emergencyContactRelationship String?
+  lifestyleDrinking            String?
+  lifestyleExercise            String?
+  lifestyleSmoking             String?
+  user                         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("patient_profiles")
+}
+
+model DoctorProfile {
+  id                String            @id @default(cuid())
+  userId            String            @unique
+  specialization    String?
+  experienceYears   Int?
+  conditionsTreated String[]
+  consultationMode  ConsultationMode?
+  availability      String?
+  qualifications    String[]
+  clinicName        String?
+  clinicAddress     String?
+  clinicPhone       String?
+  consultationFee   Float?
+  languagesSpoken   String[]
+  licenseDocument   String?
+  bio               String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("doctor_profiles")
+}
+
+model Assignment {
+  id         String   @id @default(cuid())
+  patientId  String
+  doctorId   String
+  assignedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  doctor     User     @relation("DoctorAssignments", fields: [doctorId], references: [id], onDelete: Cascade)
+  patient    User     @relation("PatientAssignments", fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([patientId, doctorId])
+  @@map("assignments")
+}
+
+model AccessGrant {
+  id          String            @id @default(cuid())
+  patientId   String
+  doctorId    String
+  grantedAt   DateTime?
+  expiresAt   DateTime?
+  requestedAt DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  createdAt   DateTime          @default(now())
+  status      AccessGrantStatus @default(PENDING)
+  doctor      User              @relation("DoctorGrants", fields: [doctorId], references: [id], onDelete: Cascade)
+  patient     User              @relation("PatientGrants", fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([patientId, doctorId], name: "patientId_doctorId")
+  @@map("access_grants")
+}
+
+model MedicalRecord {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  recordType  RecordType
+  fileName    String
+  fileUrl     String
+  fileSize    Int
+  mimeType    String
+  patientId   String
+  uploadedAt  DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime   @default(now())
+  patient     User       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@map("medical_records")
 }
 
 enum Role {
@@ -81,154 +199,30 @@ enum MedicalCondition {
   OTHER
 }
 
-model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  name         String
-  password     String
-  role         Role
-  profileLevel Int      @default(0) // 0-3 profile completion level
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  content    String
+  createdAt  DateTime @default(now())
 
-  // Relations for access grants
-  grantedAccess  AccessGrant[] @relation("PatientGrants")
-  receivedAccess AccessGrant[] @relation("DoctorGrants")
+  sender   User @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
 
-  // Relations for medical records
-  medicalRecords MedicalRecord[]
-
-  // Profile relations
-  patientProfile PatientProfile?
-  doctorProfile  DoctorProfile?
-
-  // Assignment relations
-  patientAssignments Assignment[] @relation("PatientAssignments")
-  doctorAssignments  Assignment[] @relation("DoctorAssignments")
-
-  @@map("users")
+  @@index([senderId])
+  @@index([receiverId])
+  @@map("messages")
 }
 
-model PatientProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-
-  // LEVEL 1 (required)
-  age                     Int?
-  gender                  Gender?
-  primaryProblem          MedicalCondition?
-  symptoms                String[] // max 3
-  consultationPreference  ConsultationPreference?
-
-  // LEVEL 2 (optional)
-  medicalHistory          String[]
-  currentMedications      String[]
-  emergencyContactName    String?
-  emergencyContactPhone   String?
-  emergencyContactRelationship String?
-  lifestyleSmoking        String?
-  lifestyleDrinking       String?
-  lifestyleExercise       String?
-
-  // LEVEL 3 (optional)
-  vitalsBp                String? // blood pressure
-  vitalsSugar             String? // blood sugar
-  vitalsHeartRate         Int?    // heart rate
-  vitalsOxygen            Int?    // oxygen level
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("patient_profiles")
-}
-
-model DoctorProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-
-  // LEVEL 1 (required)
-  specialization     String?
-  experienceYears    Int?
-  conditionsTreated  String[]
-  consultationMode   ConsultationMode?
-  availability       String? // JSON string for availability schedule
-
-  // LEVEL 2 (optional)
-  qualifications     String[]
-  clinicName         String?
-  clinicAddress      String?
-  clinicPhone        String?
-  consultationFee    Float?
-  languagesSpoken    String[]
-
-  // LEVEL 3 (optional)
-  licenseDocument    String? // URL to license document
-  bio                String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("doctor_profiles")
-}
-
-model Assignment {
+model HealthMetric {
   id         String   @id @default(cuid())
   patientId  String
-  doctorId   String
-  assignedAt DateTime @default(now())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  type       String
+  value      String
+  recordedAt DateTime @default(now())
 
-  // Relations
-  patient User @relation("PatientAssignments", fields: [patientId], references: [id], onDelete: Cascade)
-  doctor  User @relation("DoctorAssignments", fields: [doctorId], references: [id], onDelete: Cascade)
-
-  // Prevent duplicate assignments
-  @@unique([patientId, doctorId])
-  @@map("assignments")
-}
-
-model AccessGrant {
-  id          String            @id @default(cuid())
-  patientId   String
-  doctorId    String
-  status      AccessGrantStatus @default(PENDING)
-  requestedAt DateTime          @default(now())
-  grantedAt   DateTime?
-  expiresAt   DateTime?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-
-  // Relations
-  patient User @relation("PatientGrants", fields: [patientId], references: [id], onDelete: Cascade)
-  doctor  User @relation("DoctorGrants", fields: [doctorId], references: [id], onDelete: Cascade)
-
-  @@unique([patientId, doctorId], name: "patientId_doctorId")
-  @@map("access_grants")
-}
-
-model MedicalRecord {
-  id          String     @id @default(cuid())
-  title       String
-  description String?
-  recordType  RecordType
-  fileName    String
-  fileUrl     String
-  fileSize    Int
-  mimeType    String
-  patientId   String
-  uploadedAt  DateTime   @default(now())
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  // Relations
   patient User @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
-  @@map("medical_records")
+  @@index([patientId])
+  @@map("health_metrics")
 }

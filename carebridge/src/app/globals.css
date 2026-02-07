@@ -145,6 +145,126 @@ body {
   transform: translateY(-2px) scale(1.02) !important;
 }
 
+/* Light mode messages UI overrides */
+.light .messages-panel {
+  background: var(--bg-card) !important;
+  border-color: var(--border-light) !important;
+}
+
+.light .messages-thread {
+  background: var(--bg-card) !important;
+  background-image: none !important;
+}
+
+.light .messages-header {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-light) !important;
+}
+
+.light .messages-scroll {
+  background: var(--bg-tertiary) !important;
+  background-image: none !important;
+}
+
+.light .messages-input {
+  background: var(--bg-primary) !important;
+  border-color: var(--border-medium) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Light mode: override dark slate utility backgrounds inside messages */
+.light .messages-shell [class*="bg-slate-900"],
+.light .messages-shell [class*="bg-slate-800"],
+.light .messages-card [class*="bg-slate-900"],
+.light .messages-card [class*="bg-slate-800"] {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-light) !important;
+}
+
+/* Light mode: keep sidebar cards readable */
+.light .messages-shell .messages-sidebar {
+  background: var(--bg-card) !important;
+}
+
+.light .messages-mini-thread {
+  background: var(--bg-primary) !important;
+  border: 1px solid var(--border-light) !important;
+}
+
+.light .messages-tips {
+  background: var(--bg-primary) !important;
+  border-color: var(--border-light) !important;
+}
+
+.light .message-bubble-out {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+  color: var(--text-primary) !important;
+}
+
+.light .message-bubble-in {
+  background: rgba(226, 232, 240, 0.8) !important;
+  border-color: rgba(203, 213, 225, 1) !important;
+  color: var(--text-primary) !important;
+}
+
+.light .message-bubble {
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.light .messages-muted {
+  color: var(--text-secondary) !important;
+}
+
+/* Light mode: message cards and text readability */
+.light .messages-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border-light) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.light .messages-card .text-slate-400 {
+  color: var(--text-secondary) !important;
+}
+
+.light .messages-card .text-white {
+  color: var(--text-primary) !important;
+}
+
+/* Assigned button theme fixes */
+.assigned-action-btn:disabled {
+  opacity: 1;
+}
+
+.light .assigned-action-btn.bg-slate-600 {
+  background: #e2e8f0 !important;
+  color: #64748b !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.dark .assigned-action-btn.bg-slate-600 {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+  border: 1px solid #475569 !important;
+}
+
+/* Light mode: improve messages tab text contrast */
+.light .messages-shell .text-slate-400 {
+  color: var(--text-secondary) !important;
+}
+
+.light .messages-shell .text-slate-300 {
+  color: var(--text-secondary) !important;
+}
+
+.light .messages-shell .text-white {
+  color: var(--text-primary) !important;
+}
+
+.light .messages-panel {
+  box-shadow: var(--shadow-sm) !important;
+}
+
 /* Dark Mode Styles */
 .dark {
   /* Root variables for dark mode */

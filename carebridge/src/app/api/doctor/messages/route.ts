@@ -2,33 +2,41 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, handleMiddlewareError } from '@/lib/middleware'
 import { prisma } from '@/lib/prisma'
 
-// GET /api/patient/messages - Get messages for the assigned doctor
+// GET /api/doctor/messages - Get messages for a patient (or list assigned patients)
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth(request)
 
-    if (user.role !== 'PATIENT') {
+    if (user.role !== 'DOCTOR') {
       return NextResponse.json(
-        { error: 'Access denied. Patient role required.' },
+        { error: 'Access denied. Doctor role required.' },
         { status: 403 }
       )
     }
 
     const { searchParams } = new URL(request.url)
-    const doctorId = searchParams.get('doctorId')
+    const patientId = searchParams.get('patientId')
     const limit = parseInt(searchParams.get('limit') || '50')
 
-    if (!doctorId) {
-      return NextResponse.json({ messages: [] })
+    if (!patientId) {
+      const assignments = await prisma.assignment.findMany({
+        where: { doctorId: user.userId },
+        include: {
+          patient: { select: { id: true, name: true, email: true } }
+        }
+      })
+
+      const patients = assignments.map(a => a.patient)
+      return NextResponse.json({ patients })
     }
 
     const assignment = await prisma.assignment.findFirst({
-      where: { patientId: user.userId, doctorId }
+      where: { doctorId: user.userId, patientId }
     })
 
     if (!assignment) {
       return NextResponse.json(
-        { error: 'No assignment found with this doctor' },
+        { error: 'No assignment found with this patient' },
         { status: 403 }
       )
     }
@@ -36,8 +44,8 @@ export async function GET(request: NextRequest) {
     const messages = await prisma.message.findMany({
       where: {
         OR: [
-          { senderId: user.userId, receiverId: doctorId },
-          { senderId: doctorId, receiverId: user.userId }
+          { senderId: user.userId, receiverId: patientId },
+          { senderId: patientId, receiverId: user.userId }
         ]
       },
       orderBy: { createdAt: 'asc' },
@@ -46,45 +54,45 @@ export async function GET(request: NextRequest) {
 
     const normalizedMessages = messages.map(message => ({
       ...message,
-      sentBy: message.senderId === user.userId ? 'PATIENT' : 'DOCTOR'
+      sentBy: message.senderId === user.userId ? 'DOCTOR' : 'PATIENT'
     }))
 
     return NextResponse.json({ messages: normalizedMessages })
   } catch (error) {
-    console.error('Get patient messages error:', error)
+    console.error('Get doctor messages error:', error)
     return handleMiddlewareError(error)
   }
 }
 
-// POST /api/patient/messages - Send a message to assigned doctor
+// POST /api/doctor/messages - Send a message to a patient
 export async function POST(request: NextRequest) {
   try {
     const user = await requireAuth(request)
 
-    if (user.role !== 'PATIENT') {
+    if (user.role !== 'DOCTOR') {
       return NextResponse.json(
-        { error: 'Access denied. Patient role required.' },
+        { error: 'Access denied. Doctor role required.' },
         { status: 403 }
       )
     }
 
     const body = await request.json()
-    const { doctorId, content } = body
+    const { patientId, content } = body
 
-    if (!doctorId || !content) {
+    if (!patientId || !content) {
       return NextResponse.json(
-        { error: 'Missing required fields: doctorId, content' },
+        { error: 'Missing required fields: patientId, content' },
         { status: 400 }
       )
     }
 
     const assignment = await prisma.assignment.findFirst({
-      where: { patientId: user.userId, doctorId }
+      where: { doctorId: user.userId, patientId }
     })
 
     if (!assignment) {
       return NextResponse.json(
-        { error: 'No assignment found with this doctor' },
+        { error: 'No assignment found with this patient' },
         { status: 403 }
       )
     }
@@ -92,7 +100,7 @@ export async function POST(request: NextRequest) {
     const message = await prisma.message.create({
       data: {
         senderId: user.userId,
-        receiverId: doctorId,
+        receiverId: patientId,
         content
       }
     })
@@ -102,13 +110,13 @@ export async function POST(request: NextRequest) {
         message: 'Message sent successfully',
         messageData: {
           ...message,
-          sentBy: 'PATIENT'
+          sentBy: 'DOCTOR'
         }
       },
       { status: 201 }
     )
   } catch (error) {
-    console.error('Send patient message error:', error)
+    console.error('Send doctor message error:', error)
     return handleMiddlewareError(error)
   }
 }
