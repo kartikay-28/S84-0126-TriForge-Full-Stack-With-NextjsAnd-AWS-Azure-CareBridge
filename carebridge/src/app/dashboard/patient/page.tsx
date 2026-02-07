@@ -52,6 +52,34 @@ export default function PatientDashboard() {
     assignDoctor
   } = useDoctors()
 
+  // Assigned doctor state for messages tab
+  const [assignedDoctor, setAssignedDoctor] = useState<any>(null)
+  const [assignedDoctorLoading, setAssignedDoctorLoading] = useState(false)
+
+  useEffect(() => {
+    const fetchAssignedDoctor = async () => {
+      setAssignedDoctorLoading(true)
+      try {
+        const token = localStorage.getItem('token')
+        if (!token) return
+        const response = await fetch('/api/patient/assigned-doctor', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (!response.ok) {
+          setAssignedDoctor(null)
+          return
+        }
+        const data = await response.json()
+        setAssignedDoctor(data.doctor || null)
+      } catch (err) {
+        setAssignedDoctor(null)
+      } finally {
+        setAssignedDoctorLoading(false)
+      }
+    }
+    fetchAssignedDoctor()
+  }, [])
+
   useEffect(() => {
     setMounted(true)
     
@@ -707,21 +735,50 @@ export default function PatientDashboard() {
 
                       {dashboardData?.sectionVisibility?.messages?.visible ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
-                          <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
-                            <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                          </div>
-                          <h4 className="font-medium text-white mb-2">No messages yet</h4>
-                          <p className="text-slate-400 text-sm">Messages from your healthcare providers will appear here</p>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setShowGrantAccessModal(true)}
-                            className="mt-4 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm transition-colors"
-                          >
-                            Grant Access to Doctors
-                          </motion.button>
+                          {assignedDoctorLoading ? (
+                            <>
+                              <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+                                <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                              </div>
+                              <h4 className="font-medium text-white mb-2">Loading assigned doctor...</h4>
+                            </>
+                          ) : assignedDoctor ? (
+                            <>
+                              <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mb-4">
+                                <span className="text-emerald-400 font-bold text-lg">{assignedDoctor.name.charAt(0).toUpperCase()}</span>
+                              </div>
+                              <h4 className="font-medium text-white mb-2">You are now assigned to doctor</h4>
+                              <p className="text-slate-400 text-sm mb-2">Here you chat with Dr {assignedDoctor.name}</p>
+                              <p className="text-slate-400 text-xs">Doctor Email: {assignedDoctor.email}</p>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="mt-4 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm transition-colors"
+                              >
+                                Start Chat
+                              </motion.button>
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+                                <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                              </div>
+                              <h4 className="font-medium text-white mb-2">No messages yet</h4>
+                              <p className="text-slate-400 text-sm">Messages from your healthcare providers will appear here</p>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setShowGrantAccessModal(true)}
+                                className="mt-4 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm transition-colors"
+                              >
+                                Grant Access to Doctors
+                              </motion.button>
+                            </>
+                          )}
                         </div>
                       ) : (
                         <div className="flex flex-col items-center justify-center py-12 text-center">

@@ -23,10 +23,37 @@ export default function DoctorDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [patientEmail, setPatientEmail] = useState('')
   const [mounted, setMounted] = useState(false)
+  const [assignedPatients, setAssignedPatients] = useState<any[]>([])
+  const [patientsLoading, setPatientsLoading] = useState(false)
   const router = useRouter()
 
   // Dashboard hook to get profile level and section visibility
   const { dashboardData, isLoading: dashboardLoading } = useDoctorDashboard()
+
+  // Fetch assigned patients
+  useEffect(() => {
+    const fetchAssignedPatients = async () => {
+      setPatientsLoading(true)
+      try {
+        const token = localStorage.getItem('token')
+        if (!token) return
+        const response = await fetch('/api/doctor/assigned-patients', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (!response.ok) {
+          setAssignedPatients([])
+          return
+        }
+        const data = await response.json()
+        setAssignedPatients(data.patients || [])
+      } catch (err) {
+        setAssignedPatients([])
+      } finally {
+        setPatientsLoading(false)
+      }
+    }
+    if (user && user.role === 'DOCTOR') fetchAssignedPatients()
+  }, [user])
 
   useEffect(() => {
     setMounted(true)
@@ -580,25 +607,50 @@ export default function DoctorDashboard() {
                   Request Access
                 </motion.button>
               </div>
-              
               <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8">
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="w-20 h-20 bg-slate-700/50 rounded-full flex items-center justify-center mb-6">
-                    <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-                    </svg>
+                {patientsLoading ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-20 h-20 bg-slate-700/50 rounded-full flex items-center justify-center mb-6">
+                      <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-3">Loading patients...</h3>
                   </div>
-                  <h3 className="text-xl font-semibold text-white mb-3">No patients with granted access</h3>
-                  <p className="text-slate-400 mb-6 max-w-md">Request access to patient records to view them here. Patients will receive a notification to approve your request.</p>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowRequestModal(true)}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-                  >
-                    Request Patient Access
-                  </motion.button>
-                </div>
+                ) : assignedPatients.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-20 h-20 bg-slate-700/50 rounded-full flex items-center justify-center mb-6">
+                      <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-3">No patients assigned yet</h3>
+                    <p className="text-slate-400 mb-6 max-w-md">Request access to patient records to view them here. Patients will receive a notification to approve your request.</p>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowRequestModal(true)}
+                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+                    >
+                      Request Patient Access
+                    </motion.button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {assignedPatients.map(patient => (
+                      <div key={patient.id} className="bg-slate-900/60 rounded-lg p-4 flex items-center gap-4">
+                        <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                          <span className="text-emerald-400 font-bold text-lg">{patient.name.charAt(0).toUpperCase()}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-white mb-1">{patient.name}</h4>
+                          <p className="text-slate-400 text-sm">{patient.email}</p>
+                        </div>
+                        <span className="bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-full px-2 py-1">Assigned</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
