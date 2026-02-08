@@ -26,14 +26,54 @@ export default function DoctorDashboard() {
   const [assignedPatients, setAssignedPatients] = useState<any[]>([])
   const [patientsLoading, setPatientsLoading] = useState(false)
   const [selectedPatient, setSelectedPatient] = useState<any>(null)
+  const [requestPatientId, setRequestPatientId] = useState<string>('')
   const [doctorMessages, setDoctorMessages] = useState<any[]>([])
   const [doctorMessagesLoading, setDoctorMessagesLoading] = useState(false)
   const [doctorMessageInput, setDoctorMessageInput] = useState('')
   const [doctorMessagesError, setDoctorMessagesError] = useState<string | null>(null)
+  const [doctorRecords, setDoctorRecords] = useState<any[]>([])
+  const [doctorRecordsLoading, setDoctorRecordsLoading] = useState(false)
+  const [doctorRecordsError, setDoctorRecordsError] = useState<string | null>(null)
+  const [doctorMetrics, setDoctorMetrics] = useState<any[]>([])
+  const [doctorMetricsLoading, setDoctorMetricsLoading] = useState(false)
+  const [doctorMetricsError, setDoctorMetricsError] = useState<string | null>(null)
+  const [selectedRecordPatientId, setSelectedRecordPatientId] = useState<string>('')
+  const [patientProfile, setPatientProfile] = useState<any>(null)
+  const [patientProfileLoading, setPatientProfileLoading] = useState(false)
+  const [patientProfileError, setPatientProfileError] = useState<string | null>(null)
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [accessRequests, setAccessRequests] = useState<{ pendingRequests: any[]; approvedRequests: any[] }>(
+    { pendingRequests: [], approvedRequests: [] }
+  )
+  const [accessRequestsLoading, setAccessRequestsLoading] = useState(false)
+  const [accessRequestsError, setAccessRequestsError] = useState<string | null>(null)
   const router = useRouter()
 
   // Dashboard hook to get profile level and section visibility
-  const { dashboardData, isLoading: dashboardLoading } = useDoctorDashboard()
+  const {
+    dashboardData,
+    isLoading: dashboardLoading,
+    refetchSilent
+  } = useDoctorDashboard()
+
+  const getChatDateKey = (value?: string) => {
+    if (!value) return null
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return null
+    return date.toISOString().slice(0, 10)
+  }
+
+  const formatChatDate = (value?: string) => {
+    if (!value) return ''
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return ''
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+  }
+
+  const formatListValue = (value?: string[]) => {
+    if (!value || value.length === 0) return 'Not provided'
+    return value.join(', ')
+  }
 
   const fetchAssignedPatients = async () => {
     setPatientsLoading(true)
@@ -56,6 +96,125 @@ export default function DoctorDashboard() {
     }
   }
 
+  const fetchAccessRequests = async () => {
+    setAccessRequestsLoading(true)
+    setAccessRequestsError(null)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      const response = await fetch('/api/doctor/access-request', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        setAccessRequestsError(errorData.error || 'Failed to load access requests')
+        setAccessRequests({ pendingRequests: [], approvedRequests: [] })
+        return
+      }
+      const data = await response.json()
+      const approvedRequests = data.approvedRequests || []
+      setAccessRequests({
+        pendingRequests: data.pendingRequests || [],
+        approvedRequests
+      })
+    } catch (err) {
+      setAccessRequestsError('Failed to load access requests')
+      setAccessRequests({ pendingRequests: [], approvedRequests: [] })
+    } finally {
+      setAccessRequestsLoading(false)
+    }
+  }
+
+  const fetchDoctorRecords = async (patientId: string) => {
+    if (!patientId) return
+    setDoctorRecordsLoading(true)
+    setDoctorRecordsError(null)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      const response = await fetch(`/api/doctor/patient-records?patientId=${patientId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        setDoctorRecordsError(errorData.error || 'Failed to load records')
+        setDoctorRecords([])
+        return
+      }
+      const data = await response.json()
+      setDoctorRecords(data.records || [])
+    } catch (err) {
+      setDoctorRecordsError('Failed to load records')
+      setDoctorRecords([])
+    } finally {
+      setDoctorRecordsLoading(false)
+    }
+  }
+
+  const fetchDoctorMetrics = async (patientId: string) => {
+    if (!patientId) return
+    setDoctorMetricsLoading(true)
+    setDoctorMetricsError(null)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      const response = await fetch(`/api/doctor/health-metrics?patientId=${patientId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        setDoctorMetricsError(errorData.error || 'Failed to load health metrics')
+        setDoctorMetrics([])
+        return
+      }
+      const data = await response.json()
+      setDoctorMetrics(data.metrics || [])
+    } catch (err) {
+      setDoctorMetricsError('Failed to load health metrics')
+      setDoctorMetrics([])
+    } finally {
+      setDoctorMetricsLoading(false)
+    }
+  }
+
+  const handleOpenProfile = async () => {
+    if (!selectedRecordPatientId) return
+    setPatientProfileLoading(true)
+    setPatientProfileError(null)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      const response = await fetch(`/api/doctor/patient-profile?patientId=${selectedRecordPatientId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        setPatientProfileError(errorData.error || 'Failed to load patient profile')
+        setPatientProfile(null)
+        setShowProfileModal(true)
+        return
+      }
+      const data = await response.json()
+      setPatientProfile(data)
+      setShowProfileModal(true)
+    } catch (err) {
+      setPatientProfileError('Failed to load patient profile')
+      setPatientProfile(null)
+      setShowProfileModal(true)
+    } finally {
+      setPatientProfileLoading(false)
+    }
+  }
+
+  const handleRefreshRecords = async () => {
+    if (!selectedRecordPatientId) return
+    await Promise.all([
+      fetchDoctorRecords(selectedRecordPatientId),
+      fetchDoctorMetrics(selectedRecordPatientId)
+    ])
+    refetchSilent()
+  }
+
   // Fetch assigned patients on load and when switching tabs
   useEffect(() => {
     if (user && user.role === 'DOCTOR') {
@@ -64,10 +223,78 @@ export default function DoctorDashboard() {
   }, [user, activeTab])
 
   useEffect(() => {
+    if (
+      user &&
+      user.role === 'DOCTOR' &&
+      ['requests', 'records'].includes(activeTab)
+    ) {
+      fetchAccessRequests()
+    }
+  }, [user, activeTab])
+
+  useEffect(() => {
+    if (activeTab !== 'requests') return
+    const interval = setInterval(fetchAccessRequests, 15000)
+    return () => clearInterval(interval)
+  }, [activeTab])
+
+  useEffect(() => {
+    if (activeTab !== 'records' || !selectedRecordPatientId) return
+    const interval = setInterval(() => {
+      fetchAccessRequests()
+      fetchDoctorRecords(selectedRecordPatientId)
+      fetchDoctorMetrics(selectedRecordPatientId)
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [activeTab, selectedRecordPatientId])
+
+
+  useEffect(() => {
+    if (accessRequests.approvedRequests.length > 0 && !selectedRecordPatientId) {
+      setSelectedRecordPatientId(accessRequests.approvedRequests[0]?.patient?.id || '')
+    }
+  }, [accessRequests, selectedRecordPatientId])
+
+  useEffect(() => {
+    if (!selectedRecordPatientId) return
+    const hasAccess = accessRequests.approvedRequests.some(
+      grant => grant.patient?.id === selectedRecordPatientId
+    )
+    if (!hasAccess) {
+      setSelectedRecordPatientId('')
+      setDoctorRecords([])
+      setDoctorMetrics([])
+    }
+  }, [accessRequests, selectedRecordPatientId])
+
+  useEffect(() => {
+    if (selectedRecordPatientId) {
+      fetchDoctorRecords(selectedRecordPatientId)
+      fetchDoctorMetrics(selectedRecordPatientId)
+    } else {
+      setDoctorRecords([])
+      setDoctorMetrics([])
+    }
+  }, [selectedRecordPatientId])
+
+  useEffect(() => {
+    if (selectedRecordPatientId) {
+      fetchDoctorRecords(selectedRecordPatientId)
+      fetchDoctorMetrics(selectedRecordPatientId)
+    }
+  }, [accessRequests, selectedRecordPatientId])
+
+  useEffect(() => {
     if (!selectedPatient && assignedPatients.length > 0) {
       setSelectedPatient(assignedPatients[0])
     }
   }, [assignedPatients, selectedPatient])
+
+  useEffect(() => {
+    if (assignedPatients.length > 0 && !requestPatientId) {
+      setRequestPatientId(assignedPatients[0].id)
+    }
+  }, [assignedPatients, requestPatientId])
 
   const fetchDoctorMessages = async () => {
     if (!selectedPatient) return
@@ -127,9 +354,13 @@ export default function DoctorDashboard() {
       return
     }
     fetchDoctorMessages()
+  }, [selectedPatient])
+
+  useEffect(() => {
+    if (!selectedPatient || !['messages', 'dashboard'].includes(activeTab)) return
     const interval = setInterval(fetchDoctorMessages, 5000)
     return () => clearInterval(interval)
-  }, [selectedPatient])
+  }, [activeTab, selectedPatient])
 
   useEffect(() => {
     setMounted(true)
@@ -160,11 +391,32 @@ export default function DoctorDashboard() {
     }
   }
 
-  const handleRequestAccess = () => {
-    // TODO: Implement patient access request
-    console.log('Requesting access for:', patientEmail)
-    setPatientEmail('')
-    setShowRequestModal(false)
+  const handleRequestAccess = async () => {
+    const patientId = requestPatientId
+    if (!patientId) return
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      const response = await fetch('/api/doctor/access-request', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ patientId })
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        alert(errorData.error || 'Failed to request access')
+        return
+      }
+      setPatientEmail('')
+      setShowRequestModal(false)
+      await fetchAccessRequests()
+    } catch (error) {
+      console.error('Request access error:', error)
+      alert('Failed to request access')
+    }
   }
 
   const handleAddPatient = () => {
@@ -483,9 +735,9 @@ export default function DoctorDashboard() {
                     <h3 className="font-semibold text-white">Active Patients</h3>
                   </div>
                   <p className="text-2xl font-bold text-white mb-1">
-                    {patientsLoading ? '...' : assignedPatients.length}
+                    {dashboardLoading ? '...' : (dashboardData?.sections?.activePatients ?? 0)}
                   </p>
-                  <p className="text-slate-400 text-sm">Assigned to you</p>
+                  <p className="text-slate-400 text-sm">Assigned patients</p>
                   <button 
                     onClick={() => setActiveTab('patients')}
                     className="mt-3 text-emerald-400 text-sm hover:text-emerald-300 transition-colors"
@@ -505,7 +757,9 @@ export default function DoctorDashboard() {
                     </div>
                     <h3 className="font-semibold text-white">Pending Requests</h3>
                   </div>
-                  <p className="text-2xl font-bold text-white mb-1">0</p>
+                  <p className="text-2xl font-bold text-white mb-1">
+                    {dashboardLoading ? '...' : (dashboardData?.sections?.pendingRequests ?? 0)}
+                  </p>
                   <p className="text-slate-400 text-sm">Awaiting approval</p>
                   <button 
                     onClick={() => setActiveTab('requests')}
@@ -528,10 +782,15 @@ export default function DoctorDashboard() {
                     </div>
                     <h3 className="font-semibold text-white">Total Consents</h3>
                   </div>
-                  <p className="text-2xl font-bold text-white mb-1">0</p>
+                  <p className="text-2xl font-bold text-white mb-1">
+                    {dashboardLoading ? '...' : (dashboardData?.sections?.totalConsents ?? 0)}
+                  </p>
                   <p className="text-slate-400 text-sm">Active access grants</p>
-                  <button className="mt-3 text-blue-400 text-sm hover:text-blue-300 transition-colors">
-                    Manage →
+                  <button
+                    onClick={() => setActiveTab('requests')}
+                    className="mt-3 text-blue-400 text-sm hover:text-blue-300 transition-colors"
+                  >
+                    View →
                   </button>
                 </motion.div>
 
@@ -548,7 +807,9 @@ export default function DoctorDashboard() {
                     </div>
                     <h3 className="font-semibold text-white">Recent Records</h3>
                   </div>
-                  <p className="text-2xl font-bold text-white mb-1">0</p>
+                  <p className="text-2xl font-bold text-white mb-1">
+                    {dashboardLoading ? '...' : (dashboardData?.sections?.recentRecords ?? 0)}
+                  </p>
                   <p className="text-slate-400 text-sm">Accessed this week</p>
                   <button 
                     onClick={() => setActiveTab('records')}
@@ -574,13 +835,9 @@ export default function DoctorDashboard() {
                   </div>
                   
                   {doctorMessagesLoading ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                      </div>
-                      <h4 className="font-medium text-white mb-2">Loading messages...</h4>
+                    <div className="flex flex-col items-center justify-center py-6 text-center">
+                      <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                      <p className="text-slate-400 text-sm">Loading messages...</p>
                     </div>
                   ) : doctorMessages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -650,8 +907,8 @@ export default function DoctorDashboard() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
                         </svg>
                       </div>
-                      <h4 className="font-medium text-white mb-2">No patients yet</h4>
-                      <p className="text-slate-400 text-sm">Patients will appear here when they grant you access</p>
+                      <h4 className="font-medium text-white mb-2">No patients assigned yet</h4>
+                      <p className="text-slate-400 text-sm">Assigned patients will appear here</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -684,15 +941,45 @@ export default function DoctorDashboard() {
                     </button>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
+                  {!dashboardData?.recentRecords || dashboardData.recentRecords.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <h4 className="font-medium text-white mb-2">No records accessed yet</h4>
+                      <p className="text-slate-400 text-sm">Patient records will appear here</p>
                     </div>
-                    <h4 className="font-medium text-white mb-2">No records accessed yet</h4>
-                    <p className="text-slate-400 text-sm">Patient records will appear here</p>
-                  </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {dashboardData.recentRecords.map((record: any) => (
+                        <div key={record.id} className="flex items-start justify-between p-3 bg-slate-900/60 rounded-lg">
+                          <div className="min-w-0">
+                            <p className="text-white text-sm font-medium truncate">{record.title}</p>
+                            <p className="text-slate-400 text-xs truncate">
+                              {record.patient?.name || 'Patient'} • {record.recordType?.replace('_', ' ') || 'Record'}
+                            </p>
+                            {record.uploadedAt && (
+                              <p className="text-slate-500 text-[11px] mt-1">
+                                {new Date(record.uploadedAt).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
+                          {record.fileUrl && (
+                            <a
+                              href={record.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-emerald-400 hover:text-emerald-300 text-xs"
+                            >
+                              View
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -768,7 +1055,7 @@ export default function DoctorDashboard() {
                       </svg>
                     </div>
                     <h3 className="text-xl font-semibold text-white mb-3">No patients assigned yet</h3>
-                    <p className="text-slate-400 mb-6 max-w-md">Request access to patient records to view them here. Patients will receive a notification to approve your request.</p>
+                    <p className="text-slate-400 mb-6 max-w-md">Assigned patients will appear here once they are added to your care team.</p>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -883,31 +1170,48 @@ export default function DoctorDashboard() {
                       </div>
                       <div className="messages-scroll px-6 py-4 h-[420px] max-h-[420px] overflow-y-auto bg-gradient-to-b from-slate-900/40 to-slate-900/80">
                         {doctorMessagesLoading && doctorMessages.length === 0 ? (
-                          <p className="text-slate-400 text-sm">Loading messages...</p>
+                          <div className="flex flex-col items-center justify-center py-10 text-center">
+                            <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                            <p className="text-slate-400 text-sm">Loading messages...</p>
+                          </div>
                         ) : doctorMessages.length === 0 ? (
                           <div className="text-center py-10">
                             <p className="text-slate-300">No messages yet. Say hello!</p>
                           </div>
                         ) : (
                           <div className="space-y-3">
-                            {doctorMessages.map((msg) => (
-                              <div
-                                key={msg.id}
-                                className={`flex ${msg.sentBy === 'DOCTOR' ? 'justify-end' : 'justify-start'}`}
-                              >
-                                <div className={`message-bubble max-w-[75%] rounded-2xl px-4 py-3 text-sm ${msg.sentBy === 'DOCTOR'
-                                  ? 'message-bubble-out bg-emerald-500/20 text-emerald-100 border border-emerald-500/30'
-                                  : 'message-bubble-in bg-slate-800/80 text-slate-200 border border-slate-700/60'}`}
-                                >
-                                  <p>{msg.content}</p>
-                                  {msg.createdAt && (
-                                    <p className="messages-muted text-[10px] text-slate-400 mt-2">
-                                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </p>
+                            {doctorMessages.map((msg, index) => {
+                              const currentKey = getChatDateKey(msg.createdAt)
+                              const previousKey = index > 0 ? getChatDateKey(doctorMessages[index - 1]?.createdAt) : null
+                              const showDateDivider = currentKey && currentKey !== previousKey
+
+                              return (
+                                <div key={msg.id}>
+                                  {showDateDivider && (
+                                    <div className="flex items-center justify-center my-2">
+                                      <span className="text-[11px] text-slate-400 bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700/60">
+                                        {formatChatDate(msg.createdAt)}
+                                      </span>
+                                    </div>
                                   )}
+                                  <div
+                                    className={`flex ${msg.sentBy === 'DOCTOR' ? 'justify-end' : 'justify-start'}`}
+                                  >
+                                    <div className={`message-bubble max-w-[75%] rounded-2xl px-4 py-3 text-sm ${msg.sentBy === 'DOCTOR'
+                                      ? 'message-bubble-out bg-emerald-500/20 text-emerald-100 border border-emerald-500/30'
+                                      : 'message-bubble-in bg-slate-800/80 text-slate-200 border border-slate-700/60'}`}
+                                    >
+                                      <p>{msg.content}</p>
+                                      {msg.createdAt && (
+                                        <p className="messages-muted text-[10px] text-slate-400 mt-2">
+                                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              )
+                            })}
                           </div>
                         )}
                       </div>
@@ -950,37 +1254,172 @@ export default function DoctorDashboard() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-white">Medical Records</h2>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowRequestModal(true)}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Search Records
-                </motion.button>
-              </div>
-              
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8">
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="w-20 h-20 bg-slate-700/50 rounded-full flex items-center justify-center mb-6">
-                    <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <div className="flex items-center gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleOpenProfile}
+                    disabled={!selectedRecordPatientId || patientProfileLoading}
+                    className="bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A9 9 0 1118.364 4.56M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold text-white mb-3">No medical records available</h3>
-                  <p className="text-slate-400 mb-6 max-w-md">Medical records from patients who have granted you access will appear here. Request access to view patient records.</p>
+                    View Patient Profile
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleRefreshRecords}
+                    disabled={!selectedRecordPatientId || doctorRecordsLoading || doctorMetricsLoading}
+                    className="bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v6h6M20 20v-6h-6M5 19a9 9 0 0014-7 9 9 0 00-9-9" />
+                    </svg>
+                    Refresh
+                  </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowRequestModal(true)}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                   >
-                    Request Patient Access
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    Search Records
                   </motion.button>
                 </div>
+              </div>
+              
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8">
+                {accessRequestsError && (
+                  <div className="mb-4 bg-red-500/10 border border-red-500/30 text-red-300 text-sm rounded-lg px-4 py-3">
+                    {accessRequestsError}
+                  </div>
+                )}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Patient With Approved Access
+                  </label>
+                  {accessRequestsLoading ? (
+                    <div className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-400 text-sm">
+                      Loading approved access...
+                    </div>
+                  ) : accessRequests.approvedRequests.length === 0 ? (
+                    <div className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-400 text-sm">
+                      No approved access yet. Request access to view records.
+                    </div>
+                  ) : (
+                    <select
+                      value={selectedRecordPatientId}
+                      onChange={(e) => setSelectedRecordPatientId(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    >
+                      {accessRequests.approvedRequests.map((grant) => (
+                        <option key={grant.id} value={grant.patient?.id || ''}>
+                          {grant.patient?.name || 'Patient'} ({grant.patient?.email})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                {doctorRecordsError && (
+                  <div className="mb-4 bg-red-500/10 border border-red-500/30 text-red-300 text-sm rounded-lg px-4 py-3">
+                    {doctorRecordsError}
+                  </div>
+                )}
+
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-medium text-slate-300">Health Metrics</h3>
+                    {doctorMetricsLoading && (
+                      <span className="text-xs text-slate-400">Loading...</span>
+                    )}
+                  </div>
+                  {doctorMetricsError && (
+                    <div className="mb-3 bg-red-500/10 border border-red-500/30 text-red-300 text-xs rounded-lg px-3 py-2">
+                      {doctorMetricsError}
+                    </div>
+                  )}
+                  {doctorMetrics.length === 0 && !doctorMetricsLoading ? (
+                    <div className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-400 text-sm">
+                      No health metrics available for this patient.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {doctorMetrics.map((metric) => (
+                        <div key={metric.id} className="bg-slate-900/60 border border-slate-700/60 rounded-lg p-4">
+                          <p className="text-slate-400 text-xs mb-2">{metric.type}</p>
+                          <p className="text-white text-lg font-semibold">
+                            {metric.value}
+                            {metric.unit ? ` ${metric.unit}` : ''}
+                          </p>
+                          <span
+                            className={`inline-flex mt-2 text-[11px] px-2 py-1 rounded-full border ${
+                              metric.status === 'high'
+                                ? 'bg-red-500/10 text-red-300 border-red-500/30'
+                                : metric.status === 'low'
+                                ? 'bg-yellow-500/10 text-yellow-300 border-yellow-500/30'
+                                : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                            }`}
+                          >
+                            {metric.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {doctorRecordsLoading ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p className="text-slate-400">Loading records...</p>
+                  </div>
+                ) : doctorRecords.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-20 h-20 bg-slate-700/50 rounded-full flex items-center justify-center mb-6">
+                      <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-3">No medical records available</h3>
+                    <p className="text-slate-400 mb-6 max-w-md">Medical records from patients who have granted you access will appear here. Request access to view patient records.</p>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowRequestModal(true)}
+                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+                    >
+                      Request Patient Access
+                    </motion.button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {doctorRecords.map((record) => (
+                      <div key={record.id} className="bg-slate-900/60 rounded-lg p-4 flex items-start justify-between">
+                        <div className="min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{record.title}</p>
+                          <p className="text-slate-400 text-xs">{record.recordType?.replace('_', ' ') || 'Unknown Type'}</p>
+                          <p className="text-slate-500 text-xs mt-1">{record.fileName}</p>
+                        </div>
+                        {record.fileUrl && (
+                          <a
+                            href={record.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-emerald-400 hover:text-emerald-300 text-xs"
+                          >
+                            View
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1001,32 +1440,80 @@ export default function DoctorDashboard() {
                   New Request
                 </motion.button>
               </div>
+
+              {accessRequestsError && (
+                <div className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm rounded-lg px-4 py-3">
+                  {accessRequestsError}
+                </div>
+              )}
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">Pending Requests</h3>
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                  {accessRequestsLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                      <p className="text-slate-400 text-sm">Loading requests...</p>
                     </div>
-                    <h4 className="font-medium text-white mb-2">No pending requests</h4>
-                    <p className="text-slate-400 text-sm">Your access requests to patients will appear here</p>
-                  </div>
+                  ) : accessRequests.pendingRequests.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h4 className="font-medium text-white mb-2">No pending requests</h4>
+                      <p className="text-slate-400 text-sm">Your access requests to patients will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {accessRequests.pendingRequests.map((grant) => (
+                        <div key={grant.id} className="flex items-center justify-between p-4 bg-slate-900/60 rounded-lg">
+                          <div className="min-w-0">
+                            <p className="text-white text-sm font-medium truncate">{grant.patient?.name || 'Patient'}</p>
+                            <p className="text-slate-400 text-xs truncate">{grant.patient?.email}</p>
+                            <p className="text-slate-500 text-xs mt-1">Requested {new Date(grant.requestedAt).toLocaleDateString()}</p>
+                          </div>
+                          <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full">Pending</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">Approved Requests</h3>
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                  {accessRequestsLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                      <p className="text-slate-400 text-sm">Loading requests...</p>
                     </div>
-                    <h4 className="font-medium text-white mb-2">No approved requests</h4>
-                    <p className="text-slate-400 text-sm">Approved patient access will appear here</p>
-                  </div>
+                  ) : accessRequests.approvedRequests.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h4 className="font-medium text-white mb-2">No approved requests</h4>
+                      <p className="text-slate-400 text-sm">Approved patient access will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {accessRequests.approvedRequests.map((grant) => (
+                        <div key={grant.id} className="flex items-center justify-between p-4 bg-slate-900/60 rounded-lg">
+                          <div className="min-w-0">
+                            <p className="text-white text-sm font-medium truncate">{grant.patient?.name || 'Patient'}</p>
+                            <p className="text-slate-400 text-xs truncate">{grant.patient?.email}</p>
+                            {grant.grantedAt && (
+                              <p className="text-slate-500 text-xs mt-1">Approved {new Date(grant.grantedAt).toLocaleDateString()}</p>
+                            )}
+                          </div>
+                          <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-full">Approved</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1042,21 +1529,40 @@ export default function DoctorDashboard() {
                 Request Patient Access
               </Dialog.Title>
               <Dialog.Description className="text-slate-400 mb-6">
-                Enter the patient's email address to request access to their medical records.
+                Select an assigned patient to request access to their medical records and health metrics.
               </Dialog.Description>
               
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Patient Email
+                    Assigned Patient
                   </label>
-                  <input
-                    type="email"
-                    value={patientEmail}
-                    onChange={(e) => setPatientEmail(e.target.value)}
-                    placeholder="patient@example.com"
-                    className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  />
+                  {patientsLoading ? (
+                    <div className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-400 text-sm">
+                      Loading assigned patients...
+                    </div>
+                  ) : assignedPatients.length === 0 ? (
+                    <div className="space-y-3">
+                      <div className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-400 text-sm">
+                        No assigned patients yet. Assign a patient first.
+                      </div>
+                      <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 text-xs rounded-lg px-3 py-2">
+                        Assigned patient required to request access.
+                      </div>
+                    </div>
+                  ) : (
+                    <select
+                      value={requestPatientId}
+                      onChange={(e) => setRequestPatientId(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    >
+                      {assignedPatients.map((patient) => (
+                        <option key={patient.id} value={patient.id}>
+                          {patient.name} ({patient.email})
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
                 
                 <div className="flex gap-3 pt-4">
@@ -1064,7 +1570,7 @@ export default function DoctorDashboard() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleRequestAccess}
-                    disabled={!patientEmail}
+                    disabled={!requestPatientId || patientsLoading || assignedPatients.length === 0}
                     className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors"
                   >
                     Send Request
@@ -1078,6 +1584,107 @@ export default function DoctorDashboard() {
                     Cancel
                   </motion.button>
                 </div>
+              </div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+
+        {/* Patient Profile Modal */}
+        <Dialog.Root open={showProfileModal} onOpenChange={setShowProfileModal}>
+          <Dialog.Portal>
+            <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+            <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-slate-700 rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+              <Dialog.Title className="text-xl font-bold text-white mb-2">
+                Patient Profile Details
+              </Dialog.Title>
+              <Dialog.Description className="text-slate-400 mb-4">
+                Review profile details for the selected patient.
+              </Dialog.Description>
+
+              {patientProfileLoading ? (
+                <div className="flex items-center gap-3 text-slate-300">
+                  <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                  Loading profile...
+                </div>
+              ) : patientProfileError ? (
+                <div className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm rounded-lg px-4 py-3">
+                  {patientProfileError}
+                </div>
+              ) : patientProfile ? (
+                <div className="space-y-5">
+                  <div className="bg-slate-900/60 border border-slate-700/60 rounded-lg p-4">
+                    <p className="text-white font-semibold">{patientProfile.patient?.name || 'Patient'}</p>
+                    <p className="text-slate-400 text-sm">{patientProfile.patient?.email}</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-lg p-4">
+                      <p className="text-slate-400 text-xs mb-1">Age</p>
+                      <p className="text-white text-sm">{patientProfile.profile?.age ?? 'Not provided'}</p>
+                    </div>
+                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-lg p-4">
+                      <p className="text-slate-400 text-xs mb-1">Gender</p>
+                      <p className="text-white text-sm">{patientProfile.profile?.gender || 'Not provided'}</p>
+                    </div>
+                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-lg p-4">
+                      <p className="text-slate-400 text-xs mb-1">Primary Problem</p>
+                      <p className="text-white text-sm">{patientProfile.profile?.primaryProblem || 'Not provided'}</p>
+                    </div>
+                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-lg p-4">
+                      <p className="text-slate-400 text-xs mb-1">Consultation Preference</p>
+                      <p className="text-white text-sm">{patientProfile.profile?.consultationPreference || 'Not provided'}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-lg p-4">
+                      <p className="text-slate-400 text-xs mb-1">Symptoms</p>
+                      <p className="text-white text-sm">{formatListValue(patientProfile.profile?.symptoms)}</p>
+                    </div>
+                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-lg p-4">
+                      <p className="text-slate-400 text-xs mb-1">Medical History</p>
+                      <p className="text-white text-sm">{formatListValue(patientProfile.profile?.medicalHistory)}</p>
+                    </div>
+                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-lg p-4">
+                      <p className="text-slate-400 text-xs mb-1">Current Medications</p>
+                      <p className="text-white text-sm">{formatListValue(patientProfile.profile?.currentMedications)}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-lg p-4">
+                      <p className="text-slate-400 text-xs mb-1">Emergency Contact</p>
+                      <p className="text-white text-sm">{patientProfile.profile?.emergencyContactName || 'Not provided'}</p>
+                      <p className="text-slate-400 text-xs mt-1">{patientProfile.profile?.emergencyContactRelationship || ''}</p>
+                      <p className="text-slate-400 text-xs">{patientProfile.profile?.emergencyContactPhone || ''}</p>
+                    </div>
+                    <div className="bg-slate-900/60 border border-slate-700/60 rounded-lg p-4">
+                      <p className="text-slate-400 text-xs mb-1">Lifestyle</p>
+                      <p className="text-white text-sm">Smoking: {patientProfile.profile?.lifestyleSmoking || 'Not provided'}</p>
+                      <p className="text-white text-sm">Drinking: {patientProfile.profile?.lifestyleDrinking || 'Not provided'}</p>
+                      <p className="text-white text-sm">Exercise: {patientProfile.profile?.lifestyleExercise || 'Not provided'}</p>
+                    </div>
+                  </div>
+
+                  {patientProfile.profile?.updatedAt && (
+                    <p className="text-xs text-slate-400">
+                      Last updated {new Date(patientProfile.profile.updatedAt).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-slate-400 text-sm">No profile data available.</p>
+              )}
+
+              <div className="flex justify-end gap-3 pt-6">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowProfileModal(false)}
+                  className="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  Close
+                </motion.button>
               </div>
             </Dialog.Content>
           </Dialog.Portal>

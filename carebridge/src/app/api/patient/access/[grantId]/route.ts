@@ -1,23 +1,6 @@
-// TEMPORARILY COMMENTED OUT - Missing database models
-// These routes will be enabled once the required database models are added
-
 import { NextRequest, NextResponse } from 'next/server'
-
-export async function PUT(_request: NextRequest, { params: _params }: { params: Promise<{ grantId: string }> }) {
-  return NextResponse.json(
-    { error: 'Access API temporarily unavailable' },
-    { status: 503 }
-  )
-}
-
-export async function DELETE(_request: NextRequest, { params: _params }: { params: Promise<{ grantId: string }> }) {
-  return NextResponse.json(
-    { error: 'Access API temporarily unavailable' },
-    { status: 503 }
-  )
-}
-
-/*
+import { requireAuth, handleMiddlewareError } from '@/lib/middleware'
+import { prisma } from '@/lib/prisma'
 
 // PUT /api/patient/access/[grantId] - Update access grant status
 export async function PUT(
@@ -26,19 +9,9 @@ export async function PUT(
 ) {
   try {
     const { grantId } = await params
-    
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Authorization token required' },
-        { status: 401 }
-      )
-    }
+    const user = await requireAuth(request)
 
-    const token = authHeader.substring(7)
-    const payload = verifyToken(token)
-
-    if (payload.role !== 'PATIENT') {
+    if (user.role !== 'PATIENT') {
       return NextResponse.json(
         { error: 'Access denied. Patient role required.' },
         { status: 403 }
@@ -55,11 +28,10 @@ export async function PUT(
       )
     }
 
-    // Verify the access grant belongs to the patient
     const accessGrant = await prisma.accessGrant.findFirst({
       where: {
         id: grantId,
-        patientId: payload.userId
+        patientId: user.userId
       }
     })
 
@@ -70,15 +42,13 @@ export async function PUT(
       )
     }
 
-    // Update the access grant
     const updatedGrant = await prisma.accessGrant.update({
       where: {
         id: grantId
       },
       data: {
         status,
-        grantedAt: status === 'APPROVED' ? new Date() : accessGrant.grantedAt,
-        updatedAt: new Date()
+        grantedAt: status === 'APPROVED' ? new Date() : accessGrant.grantedAt
       },
       include: {
         doctor: {
@@ -97,10 +67,7 @@ export async function PUT(
     })
   } catch (error) {
     console.error('Update access grant error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return handleMiddlewareError(error)
   }
 }
 
@@ -111,30 +78,19 @@ export async function DELETE(
 ) {
   try {
     const { grantId } = await params
-    
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Authorization token required' },
-        { status: 401 }
-      )
-    }
+    const user = await requireAuth(request)
 
-    const token = authHeader.substring(7)
-    const payload = verifyToken(token)
-
-    if (payload.role !== 'PATIENT') {
+    if (user.role !== 'PATIENT') {
       return NextResponse.json(
         { error: 'Access denied. Patient role required.' },
         { status: 403 }
       )
     }
 
-    // Verify the access grant belongs to the patient
     const accessGrant = await prisma.accessGrant.findFirst({
       where: {
         id: grantId,
-        patientId: payload.userId
+        patientId: user.userId
       }
     })
 
@@ -145,14 +101,12 @@ export async function DELETE(
       )
     }
 
-    // Update status to REVOKED instead of deleting
     await prisma.accessGrant.update({
       where: {
         id: grantId
       },
       data: {
-        status: 'REVOKED',
-        updatedAt: new Date()
+        status: 'REVOKED'
       }
     })
 
@@ -161,9 +115,6 @@ export async function DELETE(
     })
   } catch (error) {
     console.error('Revoke access error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return handleMiddlewareError(error)
   }
-}*/
+}

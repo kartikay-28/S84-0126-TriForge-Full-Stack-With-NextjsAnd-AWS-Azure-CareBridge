@@ -25,7 +25,6 @@ export default function PatientDashboard() {
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [doctorEmail, setDoctorEmail] = useState('')
   const [mounted, setMounted] = useState(false)
   const [records, setRecords] = useState<any[]>([])
   const [recordsLoading, setRecordsLoading] = useState(false)
@@ -52,22 +51,106 @@ export default function PatientDashboard() {
     assignDoctor
   } = useDoctors()
 
-  // Assigned doctor state for messages tab
-  const [assignedDoctor, setAssignedDoctor] = useState<any>(null)
-  const [assignedDoctorLoading, setAssignedDoctorLoading] = useState(false)
+  // Access grants for access management
+  const [accessData, setAccessData] = useState<{ activeConsents: any[]; pendingRequests: any[] }>({
+    activeConsents: [],
+    pendingRequests: []
+  })
+  const [accessLoading, setAccessLoading] = useState(false)
+  const [accessError, setAccessError] = useState<string | null>(null)
+  const [assignedDoctors, setAssignedDoctors] = useState<any[]>([])
+  const [assignedDoctorsLoading, setAssignedDoctorsLoading] = useState(false)
+  const [selectedAssignedDoctorId, setSelectedAssignedDoctorId] = useState<string>('')
   const [messages, setMessages] = useState<any[]>([])
   const [messagesLoading, setMessagesLoading] = useState(false)
   const [messageInput, setMessageInput] = useState('')
   const [messagesError, setMessagesError] = useState<string | null>(null)
 
+  const getChatDateKey = (value?: string) => {
+    if (!value) return null
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return null
+    return date.toISOString().slice(0, 10)
+  }
+
+  const formatChatDate = (value?: string) => {
+    if (!value) return ''
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return ''
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+  }
+
+  const selectedMessageDoctor =
+    assignedDoctors.find(doctor => doctor.id === selectedAssignedDoctorId) ||
+    assignedDoctors[0] ||
+    null
+
+  const fetchAccessGrants = async () => {
+    setAccessLoading(true)
+    setAccessError(null)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      const response = await fetch('/api/patient/access', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        setAccessError(errorData.error || 'Failed to load access grants')
+        setAccessData({ activeConsents: [], pendingRequests: [] })
+        return
+      }
+
+      const data = await response.json()
+      const activeConsents = data.activeConsents || []
+      const pendingRequests = data.pendingRequests || []
+
+      setAccessData({ activeConsents, pendingRequests })
+    } catch (err) {
+      setAccessError('Failed to load access grants')
+      setAccessData({ activeConsents: [], pendingRequests: [] })
+    } finally {
+      setAccessLoading(false)
+    }
+  }
+
+  const fetchAssignedDoctors = async () => {
+    setAssignedDoctorsLoading(true)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      const response = await fetch('/api/patient/assigned-doctors', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) {
+        setAssignedDoctors([])
+        return
+      }
+      const data = await response.json()
+      const doctors = data.doctors || []
+      setAssignedDoctors(doctors)
+      const hasSelection = doctors.some((doctor: { id: string }) => doctor.id === selectedAssignedDoctorId)
+      if (doctors.length > 0 && (!selectedAssignedDoctorId || !hasSelection)) {
+        setSelectedAssignedDoctorId(doctors[0].id)
+      }
+    } catch (err) {
+      setAssignedDoctors([])
+    } finally {
+      setAssignedDoctorsLoading(false)
+    }
+  }
+
+
   const fetchMessages = async () => {
-    if (!assignedDoctor) return
+    if (!selectedMessageDoctor) return
     setMessagesLoading(true)
     setMessagesError(null)
     try {
       const token = localStorage.getItem('token')
       if (!token) return
-      const response = await fetch(`/api/patient/messages?doctorId=${assignedDoctor.id}`, {
+      const response = await fetch(`/api/patient/messages?doctorId=${selectedMessageDoctor.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (!response.ok) {
@@ -88,7 +171,7 @@ export default function PatientDashboard() {
 
   const handleSendMessage = async () => {
     const trimmed = messageInput.trim()
-    if (!trimmed || !assignedDoctor) return
+    if (!trimmed || !selectedMessageDoctor) return
     try {
       const token = localStorage.getItem('token')
       if (!token) return
@@ -99,7 +182,7 @@ export default function PatientDashboard() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ doctorId: assignedDoctor.id, content: trimmed })
+        body: JSON.stringify({ doctorId: selectedMessageDoctor.id, content: trimmed })
       })
       if (!response.ok) {
         const errorData = await response.json()
@@ -113,38 +196,60 @@ export default function PatientDashboard() {
   }
 
   useEffect(() => {
-    const fetchAssignedDoctor = async () => {
-      setAssignedDoctorLoading(true)
-      try {
-        const token = localStorage.getItem('token')
-        if (!token) return
-        const response = await fetch('/api/patient/assigned-doctor', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        if (!response.ok) {
-          setAssignedDoctor(null)
-          return
-        }
-        const data = await response.json()
-        setAssignedDoctor(data.doctor || null)
-      } catch (err) {
-        setAssignedDoctor(null)
-      } finally {
-        setAssignedDoctorLoading(false)
-      }
-    }
-    fetchAssignedDoctor()
+    fetchAccessGrants()
   }, [])
 
   useEffect(() => {
-    if (!assignedDoctor) {
+    if (showGrantAccessModal) {
+      fetchAssignedDoctors()
+    }
+  }, [showGrantAccessModal])
+
+  useEffect(() => {
+    if (activeTab === 'access') {
+      fetchAccessGrants()
+    }
+  }, [activeTab])
+
+  useEffect(() => {
+    if (activeTab !== 'access') return
+    const interval = setInterval(fetchAccessGrants, 15000)
+    return () => clearInterval(interval)
+  }, [activeTab])
+
+  useEffect(() => {
+    if (activeTab !== 'records') return
+    if (dashboardData && dashboardData.profileLevel >= 1) {
+      fetchRecords()
+    }
+    const interval = setInterval(() => {
+      if (dashboardData && dashboardData.profileLevel >= 1) {
+        fetchRecords()
+      }
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [activeTab, dashboardData])
+
+  useEffect(() => {
+    fetchAssignedDoctors()
+  }, [])
+
+  useEffect(() => {
+    if (['messages', 'dashboard'].includes(activeTab)) {
+      fetchAssignedDoctors()
+    }
+  }, [activeTab])
+
+  useEffect(() => {
+    if (!selectedMessageDoctor) {
       setMessages([])
       return
     }
     fetchMessages()
+    if (!['messages', 'dashboard'].includes(activeTab)) return
     const interval = setInterval(fetchMessages, 5000)
     return () => clearInterval(interval)
-  }, [assignedDoctor])
+  }, [selectedMessageDoctor, activeTab])
 
   useEffect(() => {
     setMounted(true)
@@ -194,11 +299,88 @@ export default function PatientDashboard() {
     router.push('/auth/login')
   }
 
-  const handleGrantAccess = () => {
-    // TODO: Implement grant access functionality
-    console.log('Granting access to:', doctorEmail)
-    setDoctorEmail('')
-    setShowGrantAccessModal(false)
+  const handleGrantAccess = async () => {
+    const doctorId = selectedAssignedDoctorId
+    if (!doctorId) return
+
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      const response = await fetch('/api/patient/access', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ doctorId })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        alert(errorData.error || 'Failed to grant access')
+        return
+      }
+
+      setShowGrantAccessModal(false)
+      await fetchAccessGrants()
+    } catch (error) {
+      console.error('Grant access failed:', error)
+      alert('Failed to grant access')
+    }
+  }
+
+  const handleUpdateAccessStatus = async (grantId: string, status: 'APPROVED' | 'DENIED') => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      const response = await fetch(`/api/patient/access/${grantId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        alert(errorData.error || 'Failed to update access')
+        return
+      }
+
+      await fetchAccessGrants()
+    } catch (error) {
+      console.error('Update access failed:', error)
+      alert('Failed to update access')
+    }
+  }
+
+  const handleRevokeAccess = async (grantId: string) => {
+    if (!confirm('Revoke access for this doctor?')) return
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      const response = await fetch(`/api/patient/access/${grantId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        alert(errorData.error || 'Failed to revoke access')
+        return
+      }
+
+      await fetchAccessGrants()
+    } catch (error) {
+      console.error('Revoke access failed:', error)
+      alert('Failed to revoke access')
+    }
   }
 
   const handleDeleteRecord = async (recordId: string, recordTitle: string) => {
@@ -766,7 +948,9 @@ export default function PatientDashboard() {
                         <h3 className="font-semibold text-white">Active Consents</h3>
                       </div>
                       <div className="mb-4">
-                        <div className="text-2xl font-bold text-white mb-1">0</div>
+                        <div className="text-2xl font-bold text-white mb-1">
+                          {accessLoading ? '...' : accessData.activeConsents.length}
+                        </div>
                         <p className="text-slate-400 text-sm">Doctors with access</p>
                       </div>
                       <motion.button
@@ -793,12 +977,15 @@ export default function PatientDashboard() {
                         <h3 className="font-semibold text-white">Pending Requests</h3>
                       </div>
                       <div className="mb-4">
-                        <div className="text-2xl font-bold text-white mb-1">0</div>
+                        <div className="text-2xl font-bold text-white mb-1">
+                          {accessLoading ? '...' : accessData.pendingRequests.length}
+                        </div>
                         <p className="text-slate-400 text-sm">Awaiting your approval</p>
                       </div>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
+                        onClick={() => setActiveTab('access')}
                         className="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium py-2 rounded-lg transition-colors"
                       >
                         Review Requests
@@ -822,7 +1009,7 @@ export default function PatientDashboard() {
 
                       {dashboardData?.sectionVisibility?.messages?.visible ? (
                         <div className="py-4">
-                          {assignedDoctorLoading ? (
+                          {assignedDoctorsLoading ? (
                             <div className="flex flex-col items-center justify-center py-8 text-center">
                               <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
                                 <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -831,7 +1018,7 @@ export default function PatientDashboard() {
                               </div>
                               <h4 className="font-medium text-white mb-2">Loading assigned doctor...</h4>
                             </div>
-                          ) : !assignedDoctor ? (
+                          ) : !selectedMessageDoctor ? (
                             <div className="flex flex-col items-center justify-center py-8 text-center">
                               <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
                                 <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -840,19 +1027,14 @@ export default function PatientDashboard() {
                               </div>
                               <h4 className="font-medium text-white mb-2">No messages yet</h4>
                               <p className="text-slate-400 text-sm">Messages from your healthcare providers will appear here</p>
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setShowGrantAccessModal(true)}
-                                className="mt-4 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm transition-colors"
-                              >
-                                Grant Access to Doctors
-                              </motion.button>
                             </div>
                           ) : (
                             <div className="space-y-3">
                               {messagesLoading ? (
-                                <p className="text-slate-400 text-sm">Loading messages...</p>
+                                <div className="flex flex-col items-center justify-center py-6 text-center">
+                                  <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                                  <p className="text-slate-400 text-sm">Loading messages...</p>
+                                </div>
                               ) : messages.length === 0 ? (
                                 <p className="text-slate-400 text-sm">No messages yet. Say hello!</p>
                               ) : (
@@ -867,8 +1049,8 @@ export default function PatientDashboard() {
                                       <div className="min-w-0">
                                         <p className="text-slate-300 text-xs mb-1">
                                           {message.sentBy === 'DOCTOR'
-                                            ? `Dr ${assignedDoctor.name} sent you a message`
-                                            : `You to Dr ${assignedDoctor.name}`}
+                                            ? `Dr ${selectedMessageDoctor.name} sent you a message`
+                                            : `You to Dr ${selectedMessageDoctor.name}`}
                                         </p>
                                         <p className="text-white text-sm truncate">{message.content}</p>
                                         {message.createdAt && (
@@ -992,39 +1174,57 @@ export default function PatientDashboard() {
                 {dashboardData?.sectionVisibility?.messages?.visible ? (
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="messages-sidebar lg:col-span-1">
-                      {assignedDoctorLoading ? (
+                      {assignedDoctorsLoading ? (
                         <div className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-6 text-center">
                           <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
                             <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
                           </div>
-                          <p className="text-slate-300">Loading assigned doctor...</p>
+                          <p className="text-slate-300">Loading assigned doctors...</p>
                         </div>
-                      ) : assignedDoctor ? (
+                      ) : assignedDoctors.length === 0 ? (
+                        <div className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-6 text-center">
+                          <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                          </div>
+                          <h4 className="text-white font-semibold mb-2">No messages yet</h4>
+                          <p className="text-slate-400 text-sm">Chat will be available once a doctor is assigned.</p>
+                        </div>
+                      ) : (
                         <div className="space-y-4">
                           <div className="bg-slate-900/40 border border-slate-700/50 rounded-2xl p-5">
                             <div className="flex items-center justify-between mb-4">
-                              <h3 className="text-lg font-semibold text-white">Doctor</h3>
-                              <span className="text-xs text-slate-400">1 total</span>
+                              <h3 className="text-lg font-semibold text-white">Doctors</h3>
+                              <span className="text-xs text-slate-400">{assignedDoctors.length} total</span>
                             </div>
-                            <button
-                              className="w-full text-left p-3 rounded-xl border transition-colors bg-emerald-500/15 border-emerald-500/40"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                                  <span className="text-emerald-300 font-semibold">{assignedDoctor.name.charAt(0).toUpperCase()}</span>
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="text-white text-sm font-medium truncate">Dr {assignedDoctor.name}</p>
-                                  <p className="text-slate-400 text-xs truncate">{assignedDoctor.email}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 mt-3">
-                                <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-full">Assigned</span>
-                                <span className="text-xs bg-slate-700/60 text-slate-300 px-2 py-1 rounded-full">Care Team</span>
-                              </div>
-                            </button>
+                            <div className="space-y-2">
+                              {assignedDoctors.map((doctor) => (
+                                <button
+                                  key={doctor.id}
+                                  onClick={() => setSelectedAssignedDoctorId(doctor.id)}
+                                  className={`w-full text-left p-3 rounded-xl border transition-colors ${selectedAssignedDoctorId === doctor.id
+                                    ? 'bg-emerald-500/15 border-emerald-500/40'
+                                    : 'bg-slate-900/60 border-slate-700/60 hover:bg-slate-900/80'}`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                                      <span className="text-emerald-300 font-semibold">{doctor.name.charAt(0).toUpperCase()}</span>
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="text-white text-sm font-medium truncate">Dr {doctor.name}</p>
+                                      <p className="text-slate-400 text-xs truncate">{doctor.email}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-3">
+                                    <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-full">Assigned</span>
+                                    <span className="text-xs bg-slate-700/60 text-slate-300 px-2 py-1 rounded-full">Care Team</span>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
                           </div>
 
                           <div className="messages-tips bg-slate-900/40 border border-slate-700/50 rounded-xl p-4">
@@ -1036,37 +1236,19 @@ export default function PatientDashboard() {
                             </ul>
                           </div>
                         </div>
-                      ) : (
-                        <div className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-6 text-center">
-                          <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                          </div>
-                          <h4 className="text-white font-semibold mb-2">No messages yet</h4>
-                          <p className="text-slate-400 text-sm mb-4">Grant access to connect with a doctor.</p>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setShowGrantAccessModal(true)}
-                            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm transition-colors"
-                          >
-                            Grant Access
-                          </motion.button>
-                        </div>
                       )}
                     </div>
 
                     <div className="lg:col-span-2">
-                      {assignedDoctor ? (
+                      {selectedMessageDoctor ? (
                         <div className="messages-thread bg-slate-800/60 border border-slate-700/60 rounded-2xl overflow-hidden">
                           <div className="messages-header flex items-center justify-between px-6 py-4 border-b border-slate-700/60 bg-slate-900/60">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                                <span className="text-emerald-300 font-semibold">{assignedDoctor.name.charAt(0).toUpperCase()}</span>
+                                <span className="text-emerald-300 font-semibold">{selectedMessageDoctor.name.charAt(0).toUpperCase()}</span>
                               </div>
                               <div>
-                                <p className="text-white font-semibold">Dr {assignedDoctor.name}</p>
+                                <p className="text-white font-semibold">Dr {selectedMessageDoctor.name}</p>
                                 <p className="text-slate-400 text-xs">Typically replies within 24 hours</p>
                               </div>
                             </div>
@@ -1075,31 +1257,48 @@ export default function PatientDashboard() {
 
                           <div className="messages-scroll px-6 py-4 h-80 overflow-y-auto bg-gradient-to-b from-slate-900/40 to-slate-900/80">
                             {messagesLoading && messages.length === 0 ? (
-                              <p className="text-slate-400 text-sm">Loading messages...</p>
+                              <div className="flex flex-col items-center justify-center py-10 text-center">
+                                <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                                <p className="text-slate-400 text-sm">Loading messages...</p>
+                              </div>
                             ) : messages.length === 0 ? (
                               <div className="text-center py-10">
                                 <p className="text-slate-300">No messages yet. Say hello!</p>
                               </div>
                             ) : (
                               <div className="space-y-3">
-                                {messages.map((msg) => (
-                                  <div
-                                    key={msg.id}
-                                    className={`flex ${msg.sentBy === 'PATIENT' ? 'justify-end' : 'justify-start'}`}
-                                  >
-                                      <div className={`message-bubble max-w-[75%] rounded-2xl px-4 py-3 text-sm ${msg.sentBy === 'PATIENT'
-                                        ? 'message-bubble-out bg-emerald-500/20 text-emerald-100 border border-emerald-500/30'
-                                        : 'message-bubble-in bg-slate-800/80 text-slate-200 border border-slate-700/60'}`}
-                                    >
-                                      <p>{msg.content}</p>
-                                      {msg.createdAt && (
-                                        <p className="messages-muted text-[10px] text-slate-400 mt-2">
-                                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </p>
+                                {messages.map((msg, index) => {
+                                  const currentKey = getChatDateKey(msg.createdAt)
+                                  const previousKey = index > 0 ? getChatDateKey(messages[index - 1]?.createdAt) : null
+                                  const showDateDivider = currentKey && currentKey !== previousKey
+
+                                  return (
+                                    <div key={msg.id}>
+                                      {showDateDivider && (
+                                        <div className="flex items-center justify-center my-2">
+                                          <span className="text-[11px] text-slate-400 bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700/60">
+                                            {formatChatDate(msg.createdAt)}
+                                          </span>
+                                        </div>
                                       )}
+                                      <div
+                                        className={`flex ${msg.sentBy === 'PATIENT' ? 'justify-end' : 'justify-start'}`}
+                                      >
+                                        <div className={`message-bubble max-w-[75%] rounded-2xl px-4 py-3 text-sm ${msg.sentBy === 'PATIENT'
+                                          ? 'message-bubble-out bg-emerald-500/20 text-emerald-100 border border-emerald-500/30'
+                                          : 'message-bubble-in bg-slate-800/80 text-slate-200 border border-slate-700/60'}`}
+                                        >
+                                          <p>{msg.content}</p>
+                                          {msg.createdAt && (
+                                            <p className="messages-muted text-[10px] text-slate-400 mt-2">
+                                              {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  )
+                                })}
                               </div>
                             )}
                           </div>
@@ -1305,31 +1504,103 @@ export default function PatientDashboard() {
                 </motion.button>
               </div>
 
+              {accessError && (
+                <div className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm rounded-lg px-4 py-3">
+                  {accessError}
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift">
                   <h3 className="text-lg font-semibold text-white mb-4">Active Consents</h3>
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                  {accessLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                      <p className="text-slate-400 text-sm">Loading access grants...</p>
                     </div>
-                    <h4 className="font-medium text-white mb-2">No active consents</h4>
-                    <p className="text-slate-400 text-sm">Doctors you've granted access to will appear here</p>
-                  </div>
+                  ) : accessData.activeConsents.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h4 className="font-medium text-white mb-2">No active consents</h4>
+                      <p className="text-slate-400 text-sm">Doctors you've granted access to will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {accessData.activeConsents.map((grant) => (
+                        <div key={grant.id} className="flex items-center justify-between p-4 bg-slate-900/60 rounded-lg">
+                          <div className="min-w-0">
+                            <p className="text-white text-sm font-medium truncate">Dr {grant.doctor?.name || 'Doctor'}</p>
+                            <p className="text-slate-400 text-xs truncate">{grant.doctor?.email}</p>
+                            {grant.expiresAt && (
+                              <p className="text-slate-500 text-xs mt-1">Expires {new Date(grant.expiresAt).toLocaleDateString()}</p>
+                            )}
+                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => handleRevokeAccess(grant.id)}
+                            className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs rounded-lg transition-colors"
+                          >
+                            Revoke
+                          </motion.button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift">
                   <h3 className="text-lg font-semibold text-white mb-4">Pending Requests</h3>
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                  {accessLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                      <p className="text-slate-400 text-sm">Loading access grants...</p>
                     </div>
-                    <h4 className="font-medium text-white mb-2">No pending requests</h4>
-                    <p className="text-slate-400 text-sm">Access requests from doctors will appear here</p>
-                  </div>
+                  ) : accessData.pendingRequests.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h4 className="font-medium text-white mb-2">No pending requests</h4>
+                      <p className="text-slate-400 text-sm">Access requests from doctors will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {accessData.pendingRequests.map((grant) => (
+                        <div key={grant.id} className="flex items-center justify-between p-4 bg-slate-900/60 rounded-lg">
+                          <div className="min-w-0">
+                            <p className="text-white text-sm font-medium truncate">Dr {grant.doctor?.name || 'Doctor'}</p>
+                            <p className="text-slate-400 text-xs truncate">{grant.doctor?.email}</p>
+                            <p className="text-slate-500 text-xs mt-1">Requested {new Date(grant.requestedAt).toLocaleDateString()}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <motion.button
+                              whileHover={{ scale: 1.03 }}
+                              whileTap={{ scale: 0.97 }}
+                              onClick={() => handleUpdateAccessStatus(grant.id, 'APPROVED')}
+                              className="px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs rounded-lg transition-colors"
+                            >
+                              Approve
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.03 }}
+                              whileTap={{ scale: 0.97 }}
+                              onClick={() => handleUpdateAccessStatus(grant.id, 'DENIED')}
+                              className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs rounded-lg transition-colors"
+                            >
+                              Deny
+                            </motion.button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1485,21 +1756,40 @@ export default function PatientDashboard() {
                 Grant Doctor Access
               </Dialog.Title>
               <Dialog.Description className="text-slate-400 mb-6">
-                Enter your doctor's email address to grant them access to your medical records.
+                Select an assigned doctor to grant access to your medical records and health metrics.
               </Dialog.Description>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Doctor's Email
+                    Assigned Doctor
                   </label>
-                  <input
-                    type="email"
-                    value={doctorEmail}
-                    onChange={(e) => setDoctorEmail(e.target.value)}
-                    placeholder="doctor@example.com"
-                    className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  />
+                  {assignedDoctorsLoading ? (
+                    <div className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-400 text-sm">
+                      Loading assigned doctors...
+                    </div>
+                  ) : assignedDoctors.length === 0 ? (
+                    <div className="space-y-3">
+                      <div className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-slate-400 text-sm">
+                        No assigned doctors yet. Assign a doctor first.
+                      </div>
+                      <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 text-xs rounded-lg px-3 py-2">
+                        Assigned doctor required to grant access.
+                      </div>
+                    </div>
+                  ) : (
+                    <select
+                      value={selectedAssignedDoctorId}
+                      onChange={(e) => setSelectedAssignedDoctorId(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    >
+                      {assignedDoctors.map((doctor) => (
+                        <option key={doctor.id} value={doctor.id}>
+                          Dr {doctor.name} ({doctor.email})
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 <div className="flex gap-3 pt-4">
@@ -1507,7 +1797,7 @@ export default function PatientDashboard() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleGrantAccess}
-                    disabled={!doctorEmail}
+                    disabled={!selectedAssignedDoctorId || assignedDoctorsLoading || assignedDoctors.length === 0}
                     className="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors"
                   >
                     Grant Access

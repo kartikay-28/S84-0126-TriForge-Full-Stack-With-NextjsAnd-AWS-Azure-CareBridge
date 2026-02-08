@@ -71,12 +71,58 @@ export async function GET(request: NextRequest) {
       nextRecommendedStep = "Your profile is complete!"
     }
 
+    const now = new Date()
+    const activeGrants = await prisma.accessGrant.findMany({
+      where: {
+        doctorId: user.userId,
+        status: 'APPROVED',
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }]
+      },
+      select: { patientId: true }
+    })
+
+    const activePatientIds = Array.from(new Set(activeGrants.map(grant => grant.patientId)))
+
+    const pendingRequests = await prisma.accessGrant.count({
+      where: {
+        doctorId: user.userId,
+        status: 'PENDING'
+      }
+    })
+
+    const recentCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const recentRecordsCount = activePatientIds.length
+      ? await prisma.medicalRecord.count({
+        where: {
+          patientId: { in: activePatientIds },
+          uploadedAt: { gte: recentCutoff }
+        }
+      })
+      : 0
+
+    const recentRecords = activePatientIds.length
+      ? await prisma.medicalRecord.findMany({
+        where: {
+          patientId: { in: activePatientIds }
+        },
+        orderBy: { uploadedAt: 'desc' },
+        take: 3,
+        include: {
+          patient: { select: { name: true, email: true } }
+        }
+      })
+      : []
+
+    const assignedPatientsCount = await prisma.assignment.count({
+      where: { doctorId: user.userId }
+    })
+
     // Get dashboard sections data
     const sections = {
-      activePatients: 0, // TODO: Count patients with active consent
-      pendingRequests: 0, // TODO: Count pending access requests
-      totalConsents: 0, // TODO: Count total consents
-      recentRecords: 0 // TODO: Count recently accessed records
+      activePatients: assignedPatientsCount,
+      pendingRequests,
+      totalConsents: activeGrants.length,
+      recentRecords: recentRecordsCount
     }
 
     return NextResponse.json({
@@ -84,6 +130,7 @@ export async function GET(request: NextRequest) {
       sectionVisibility,
       nextRecommendedStep,
       sections,
+      recentRecords,
       doctorProfile: doctorProfile ? {
         specialization: doctorProfile.specialization,
         experienceYears: doctorProfile.experienceYears,
