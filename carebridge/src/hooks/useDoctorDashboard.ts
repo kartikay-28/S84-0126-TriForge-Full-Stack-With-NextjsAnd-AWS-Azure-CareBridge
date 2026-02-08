@@ -12,6 +12,7 @@ interface DoctorDashboardData {
   }
   nextRecommendedStep: string
   sections: any
+  recentRecords?: any[]
 }
 
 interface UseDoctorDashboardReturn {
@@ -19,6 +20,7 @@ interface UseDoctorDashboardReturn {
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
+  refetchSilent: () => Promise<void>
 }
 
 export function useDoctorDashboard(): UseDoctorDashboardReturn {
@@ -26,8 +28,11 @@ export function useDoctorDashboard(): UseDoctorDashboardReturn {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchDashboard = async () => {
+  const fetchDashboard = async (setLoading: boolean) => {
     try {
+      if (setLoading) {
+        setIsLoading(true)
+      }
       const token = localStorage.getItem('token')
       if (!token) {
         throw new Error('No authentication token found')
@@ -52,23 +57,31 @@ export function useDoctorDashboard(): UseDoctorDashboardReturn {
       setError(errorMessage)
       console.error('Doctor dashboard fetch error:', err)
     } finally {
-      setIsLoading(false)
+      if (setLoading) {
+        setIsLoading(false)
+      }
     }
   }
 
   useEffect(() => {
-    fetchDashboard()
+    fetchDashboard(true)
   }, [])
 
   const refetch = async () => {
     setIsLoading(true)
-    await fetchDashboard()
+    await fetchDashboard(false)
+    setIsLoading(false)
+  }
+
+  const refetchSilent = async () => {
+    await fetchDashboard(false)
   }
 
   return {
     dashboardData,
     isLoading,
     error,
-    refetch
+    refetch,
+    refetchSilent
   }
 }

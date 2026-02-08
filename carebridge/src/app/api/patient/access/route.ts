@@ -1,39 +1,13 @@
-// TEMPORARILY COMMENTED OUT - Missing database models
-// These routes will be enabled once the required database models are added
-
 import { NextRequest, NextResponse } from 'next/server'
-
-export async function GET(_request: NextRequest) {
-  return NextResponse.json(
-    { error: 'Access API temporarily unavailable' },
-    { status: 503 }
-  )
-}
-
-export async function POST(_request: NextRequest) {
-  return NextResponse.json(
-    { error: 'Access API temporarily unavailable' },
-    { status: 503 }
-  )
-}
-
-/*
+import { requireAuth, handleMiddlewareError } from '@/lib/middleware'
+import { prisma } from '@/lib/prisma'
 
 // GET /api/patient/access - Get all access grants for the patient
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Authorization token required' },
-        { status: 401 }
-      )
-    }
+    const user = await requireAuth(request)
 
-    const token = authHeader.substring(7)
-    const payload = verifyToken(token)
-
-    if (payload.role !== 'PATIENT') {
+    if (user.role !== 'PATIENT') {
       return NextResponse.json(
         { error: 'Access denied. Patient role required.' },
         { status: 403 }
@@ -42,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     const accessGrants = await prisma.accessGrant.findMany({
       where: {
-        patientId: payload.userId
+        patientId: user.userId
       },
       include: {
         doctor: {
@@ -58,7 +32,12 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const activeConsents = accessGrants.filter(grant => grant.status === 'APPROVED')
+    const now = new Date()
+    const activeConsents = accessGrants.filter(grant => {
+      if (grant.status !== 'APPROVED') return false
+      if (!grant.expiresAt) return true
+      return grant.expiresAt > now
+    })
     const pendingRequests = accessGrants.filter(grant => grant.status === 'PENDING')
 
     return NextResponse.json({
@@ -68,28 +47,16 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Get access grants error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return handleMiddlewareError(error)
   }
 }
 
 // POST /api/patient/access - Grant access to a doctor
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Authorization token required' },
-        { status: 401 }
-      )
-    }
+    const user = await requireAuth(request)
 
-    const token = authHeader.substring(7)
-    const payload = verifyToken(token)
-
-    if (payload.role !== 'PATIENT') {
+    if (user.role !== 'PATIENT') {
       return NextResponse.json(
         { error: 'Access denied. Patient role required.' },
         { status: 403 }
@@ -97,75 +64,86 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { doctorEmail, expiresInDays } = body
+    const { doctorEmail, doctorId, expiresInDays } = body
 
-    if (!doctorEmail) {
+    if (!doctorEmail && !doctorId) {
       return NextResponse.json(
-        { error: 'Doctor email is required' },
+        { error: 'Doctor identifier is required' },
         { status: 400 }
       )
     }
 
-    // Find the doctor by email
-    const doctor = await prisma.user.findUnique({
-      where: {
-        email: doctorEmail,
-        role: 'DOCTOR'
-      }
-    })
+    const doctor = doctorId
+      ? await prisma.user.findFirst({
+        where: {
+          id: doctorId,
+          role: 'DOCTOR'
+        }
+      })
+      : await prisma.user.findFirst({
+        where: {
+          email: doctorEmail,
+          role: 'DOCTOR'
+        }
+      })
 
     if (!doctor) {
       return NextResponse.json(
-        { error: 'Doctor not found with this email' },
+        { error: 'Doctor not found' },
         { status: 404 }
       )
     }
 
-    // Check if access already exists
+    const assignment = await prisma.assignment.findFirst({
+      where: {
+        patientId: user.userId,
+        doctorId: doctor.id
+      }
+    })
+
+    if (!assignment) {
+      return NextResponse.json(
+        { error: 'Access can only be granted to assigned doctors' },
+        { status: 403 }
+      )
+    }
+
     const existingAccess = await prisma.accessGrant.findUnique({
       where: {
         patientId_doctorId: {
-          patientId: payload.userId,
+          patientId: user.userId,
           doctorId: doctor.id
         }
       }
     })
 
-    if (existingAccess) {
-      if (existingAccess.status === 'APPROVED') {
-        return NextResponse.json(
-          { error: 'Access already granted to this doctor' },
-          { status: 409 }
-        )
-      } else if (existingAccess.status === 'PENDING') {
-        return NextResponse.json(
-          { error: 'Access request already pending for this doctor' },
-          { status: 409 }
-        )
-      }
+    const now = new Date()
+    const isActive = existingAccess?.status === 'APPROVED' && (!existingAccess.expiresAt || existingAccess.expiresAt > now)
+    if (isActive) {
+      return NextResponse.json(
+        { error: 'Access already granted to this doctor' },
+        { status: 409 }
+      )
     }
 
-    // Calculate expiration date
-    const expiresAt = expiresInDays 
-      ? new Date(Date.now() + (expiresInDays * 24 * 60 * 60 * 1000))
+    const expiresAt = expiresInDays
+      ? new Date(Date.now() + (Number(expiresInDays) * 24 * 60 * 60 * 1000))
       : null
 
-    // Create or update access grant
     const accessGrant = await prisma.accessGrant.upsert({
       where: {
         patientId_doctorId: {
-          patientId: payload.userId,
+          patientId: user.userId,
           doctorId: doctor.id
         }
       },
       update: {
         status: 'APPROVED',
         grantedAt: new Date(),
-        expiresAt,
-        updatedAt: new Date()
+        expiresAt
       },
       create: {
-        patientId: payload.userId,
+        patientId: user.userId,
         doctorId: doctor.id,
         status: 'APPROVED',
         grantedAt: new Date(),
@@ -191,9 +169,6 @@ export async function POST(request: NextRequest) {
     )
   } catch (error) {
     console.error('Grant access error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return handleMiddlewareError(error)
   }
-}*/
+}
