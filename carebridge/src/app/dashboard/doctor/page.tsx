@@ -434,14 +434,14 @@ export default function DoctorDashboard() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center loading-screen">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center loading-screen">
         <div className="text-white">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen text-white flex dashboard-container" style={{ position: 'relative', overflow: 'visible', background: 'var(--background)', color: 'var(--foreground)' }}>
+    <div className="min-h-screen bg-slate-900 text-white flex dashboard-container" style={{ position: 'relative', overflow: 'visible' }}>
       {/* Sidebar */}
       <div className="w-64 glass-surface border-r flex flex-col" style={{ borderColor: 'var(--border-light)' }}>
         {/* Logo */}
@@ -464,11 +464,10 @@ export default function DoctorDashboard() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveTab('dashboard')}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  activeTab === 'dashboard' 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'dashboard'
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
@@ -481,11 +480,10 @@ export default function DoctorDashboard() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveTab('patients')}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  activeTab === 'patients' 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'patients'
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
@@ -498,11 +496,10 @@ export default function DoctorDashboard() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveTab('messages')}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  activeTab === 'messages' 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'messages'
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -520,11 +517,10 @@ export default function DoctorDashboard() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveTab('records')}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  activeTab === 'records' 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'records'
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -537,11 +533,10 @@ export default function DoctorDashboard() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveTab('requests')}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  activeTab === 'requests' 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${activeTab === 'requests'
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                  }`}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -606,18 +601,18 @@ export default function DoctorDashboard() {
                   <span className="text-white font-bold">{user.name.charAt(0).toUpperCase()}</span>
                 </motion.button>
               </div>
-              
+
               {/* Profile Dropdown Portal - Renders at document body level */}
               {mounted && showProfileMenu && createPortal(
-                <div 
+                <div
                   className="fixed inset-0"
-                  style={{ 
+                  style={{
                     zIndex: 999999,
                     pointerEvents: 'auto'
                   }}
                 >
                   {/* Backdrop */}
-                  <div 
+                  <div
                     className="absolute inset-0"
                     style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
                     onClick={() => {
@@ -625,23 +620,16 @@ export default function DoctorDashboard() {
                       setShowProfileMenu(false)
                     }}
                   />
-                  
+
                   {/* Dropdown Menu */}
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: -10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                    className="absolute bg-slate-800 border border-slate-700 rounded-lg shadow-2xl w-48 py-2"
-                    style={{ 
-                      top: '80px',
-                      right: '24px',
-                      zIndex: 1000000,
-                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)',
-                      backgroundColor: 'rgba(30, 41, 59, 0.98)',
-                      border: '1px solid rgba(148, 163, 184, 0.2)'
-                    }}
+                    className="absolute top-20 right-6 bg-slate-900/98 border border-slate-700/50 rounded-lg shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.1)] w-48 py-2 z-[1000000] backdrop-blur-xl"
+                    style={{
+                      zIndex: 1000000
+                    } as any}
                   >
                     <div className="px-4 py-3 border-b border-slate-700">
                       <p className="font-semibold text-white">Dr. {user?.name || 'Doctor'}</p>
@@ -711,7 +699,7 @@ export default function DoctorDashboard() {
                   >
                     Complete Professional Profile
                   </motion.button>
-                  
+
                   <div className="mt-8 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
                     <p className="text-sm text-slate-400">
                       🏥 Build credibility • Accept patients • Access medical records
@@ -732,308 +720,308 @@ export default function DoctorDashboard() {
                     </div>
                   )}
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                {/* Active Patients */}
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="stats-card p-6"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                      <span className="text-emerald-400 text-lg">👥</span>
-                    </div>
-                    <h3 className="font-semibold text-white">Active Patients</h3>
-                  </div>
-                  <p className="text-2xl font-bold text-white mb-1">
-                    {dashboardLoading ? '...' : (dashboardData?.sections?.activePatients ?? 0)}
-                  </p>
-                  <p className="text-slate-400 text-sm">Assigned patients</p>
-                  <button 
-                    onClick={() => setActiveTab('patients')}
-                    className="mt-3 text-emerald-400 text-sm hover:text-emerald-300 transition-colors"
-                  >
-                    View All →
-                  </button>
-                </motion.div>
-
-                {/* Pending Requests */}
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="stats-card p-6"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
-                    </div>
-                    <h3 className="font-semibold text-white">Pending Requests</h3>
-                  </div>
-                  <p className="text-2xl font-bold text-white mb-1">
-                    {dashboardLoading ? '...' : (dashboardData?.sections?.pendingRequests ?? 0)}
-                  </p>
-                  <p className="text-slate-400 text-sm">Awaiting approval</p>
-                  <button 
-                    onClick={() => setActiveTab('requests')}
-                    className="mt-3 text-yellow-400 text-sm hover:text-yellow-300 transition-colors"
-                  >
-                    Review →
-                  </button>
-                </motion.div>
-
-                {/* Total Consents */}
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="stats-card p-6"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h3 className="font-semibold text-white">Total Consents</h3>
-                  </div>
-                  <p className="text-2xl font-bold text-white mb-1">
-                    {dashboardLoading ? '...' : (dashboardData?.sections?.totalConsents ?? 0)}
-                  </p>
-                  <p className="text-slate-400 text-sm">Active access grants</p>
-                  <button
-                    onClick={() => setActiveTab('requests')}
-                    className="mt-3 text-blue-400 text-sm hover:text-blue-300 transition-colors"
-                  >
-                    View →
-                  </button>
-                </motion.div>
-
-                {/* Recent Records */}
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="stats-card p-6"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <h3 className="font-semibold text-white">Recent Records</h3>
-                  </div>
-                  <p className="text-2xl font-bold text-white mb-1">
-                    {dashboardLoading ? '...' : (dashboardData?.sections?.recentRecords ?? 0)}
-                  </p>
-                  <p className="text-slate-400 text-sm">Accessed this week</p>
-                  <button 
-                    onClick={() => setActiveTab('records')}
-                    className="mt-3 text-purple-400 text-sm hover:text-purple-300 transition-colors"
-                  >
-                    View Records →
-                  </button>
-                </motion.div>
-              </div>
-
-              {/* Bottom Sections */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                {/* Messages */}
-                <div className="dashboard-card messages-card p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-white">Recent Messages</h3>
-                      {unreadMessagesCount > 0 && (
-                        <span className="rounded-full bg-rose-500/20 px-2 py-0.5 text-xs font-semibold text-rose-200">
-                          {unreadMessagesCount} unread
-                        </span>
-                      )}
-                    </div>
-                    <button 
-                      onClick={() => setActiveTab('messages')}
-                      className="text-emerald-400 text-sm hover:text-emerald-300"
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    {/* Active Patients */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className="stats-card p-6"
                     >
-                      View All →
-                    </button>
-                  </div>
-                  
-                  {doctorMessagesLoading ? (
-                    <div className="flex flex-col items-center justify-center py-6 text-center">
-                      <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-                      <p className="text-slate-400 text-sm">Loading messages...</p>
-                    </div>
-                  ) : doctorMessages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                      </div>
-                      <h4 className="font-medium text-white mb-2">No messages yet</h4>
-                      <p className="text-slate-400 text-sm">Patient messages will appear here</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {doctorMessages.slice(-3).map((message) => (
-                        <div key={message.id} className="flex items-start gap-3 p-3 bg-slate-900/60 rounded-lg">
-                          <div className="w-9 h-9 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                            <span className="text-emerald-400 text-xs font-semibold">
-                              {message.sentBy === 'DOCTOR'
-                                ? 'ME'
-                                : (selectedPatient?.name?.charAt(0).toUpperCase() || 'P')}
-                            </span>
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-slate-300 text-xs mb-1">
-                              {message.sentBy === 'PATIENT'
-                                ? `${selectedPatient?.name || 'Patient'} sent you a message`
-                                : `You to ${selectedPatient?.name || 'patient'}`}
-                            </p>
-                            <p className="text-white text-sm truncate">{message.content}</p>
-                            {message.createdAt && (
-                              <p className="text-slate-400 text-xs mt-1">
-                                {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </p>
-                            )}
-                          </div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                          <span className="text-emerald-400 text-lg">👥</span>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                        <h3 className="font-semibold text-white">Active Patients</h3>
+                      </div>
+                      <p className="text-2xl font-bold text-white mb-1">
+                        {dashboardLoading ? '...' : (dashboardData?.sections?.activePatients ?? 0)}
+                      </p>
+                      <p className="text-slate-400 text-sm">Assigned patients</p>
+                      <button
+                        onClick={() => setActiveTab('patients')}
+                        className="mt-3 text-emerald-400 text-sm hover:text-emerald-300 transition-colors"
+                      >
+                        View All →
+                      </button>
+                    </motion.div>
 
-                {/* Patients */}
-                <div className="dashboard-card p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-semibold text-white">Recent Patients</h3>
-                    <button 
-                      onClick={() => setActiveTab('patients')}
-                      className="text-emerald-400 text-sm hover:text-emerald-300"
+                    {/* Pending Requests */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className="stats-card p-6"
                     >
-                      View All →
-                    </button>
-                  </div>
-                  
-                  {patientsLoading ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-                        </svg>
-                      </div>
-                      <h4 className="font-medium text-white mb-2">Loading patients...</h4>
-                    </div>
-                  ) : assignedPatients.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-                        </svg>
-                      </div>
-                      <h4 className="font-medium text-white mb-2">No patients assigned yet</h4>
-                      <p className="text-slate-400 text-sm">Assigned patients will appear here</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {assignedPatients.slice(0, 3).map(patient => (
-                        <div key={patient.id} className="flex items-center gap-3 p-3 bg-slate-900/60 rounded-lg">
-                          <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                            <span className="text-emerald-400 font-semibold">
-                              {patient.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-white text-sm font-medium truncate">{patient.name}</p>
-                            <p className="text-slate-400 text-xs truncate">{patient.email}</p>
-                          </div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                          <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Records */}
-                <div className="dashboard-card p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-semibold text-white">Recent Records</h3>
-                    <button 
-                      onClick={() => setActiveTab('records')}
-                      className="text-emerald-400 text-sm hover:text-emerald-300"
-                    >
-                      View All →
-                    </button>
-                  </div>
-                  
-                  {!dashboardData?.recentRecords || dashboardData.recentRecords.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+                        <h3 className="font-semibold text-white">Pending Requests</h3>
                       </div>
-                      <h4 className="font-medium text-white mb-2">No records accessed yet</h4>
-                      <p className="text-slate-400 text-sm">Patient records will appear here</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {dashboardData.recentRecords.map((record: any) => (
-                        <div key={record.id} className="flex items-start justify-between p-3 bg-slate-900/60 rounded-lg">
-                          <div className="min-w-0">
-                            <p className="text-white text-sm font-medium truncate">{record.title}</p>
-                            <p className="text-slate-400 text-xs truncate">
-                              {record.patient?.name || 'Patient'} • {record.recordType?.replace('_', ' ') || 'Record'}
-                            </p>
-                            {record.uploadedAt && (
-                              <p className="text-slate-500 text-[11px] mt-1">
-                                {new Date(record.uploadedAt).toLocaleDateString()}
-                              </p>
-                            )}
-                          </div>
-                          {record.fileUrl && (
-                            <a
-                              href={record.fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-emerald-400 hover:text-emerald-300 text-xs"
-                            >
-                              View
-                            </a>
+                      <p className="text-2xl font-bold text-white mb-1">
+                        {dashboardLoading ? '...' : (dashboardData?.sections?.pendingRequests ?? 0)}
+                      </p>
+                      <p className="text-slate-400 text-sm">Awaiting approval</p>
+                      <button
+                        onClick={() => setActiveTab('requests')}
+                        className="mt-3 text-yellow-400 text-sm hover:text-yellow-300 transition-colors"
+                      >
+                        Review →
+                      </button>
+                    </motion.div>
+
+                    {/* Total Consents */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className="stats-card p-6"
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                          <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <h3 className="font-semibold text-white">Total Consents</h3>
+                      </div>
+                      <p className="text-2xl font-bold text-white mb-1">
+                        {dashboardLoading ? '...' : (dashboardData?.sections?.totalConsents ?? 0)}
+                      </p>
+                      <p className="text-slate-400 text-sm">Active access grants</p>
+                      <button
+                        onClick={() => setActiveTab('requests')}
+                        className="mt-3 text-blue-400 text-sm hover:text-blue-300 transition-colors"
+                      >
+                        View →
+                      </button>
+                    </motion.div>
+
+                    {/* Recent Records */}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className="stats-card p-6"
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                          <svg className="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <h3 className="font-semibold text-white">Recent Records</h3>
+                      </div>
+                      <p className="text-2xl font-bold text-white mb-1">
+                        {dashboardLoading ? '...' : (dashboardData?.sections?.recentRecords ?? 0)}
+                      </p>
+                      <p className="text-slate-400 text-sm">Accessed this week</p>
+                      <button
+                        onClick={() => setActiveTab('records')}
+                        className="mt-3 text-purple-400 text-sm hover:text-purple-300 transition-colors"
+                      >
+                        View Records →
+                      </button>
+                    </motion.div>
+                  </div>
+
+                  {/* Bottom Sections */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    {/* Messages */}
+                    <div className="dashboard-card messages-card p-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-white">Recent Messages</h3>
+                          {unreadMessagesCount > 0 && (
+                            <span className="rounded-full bg-rose-500/20 px-2 py-0.5 text-xs font-semibold text-rose-200">
+                              {unreadMessagesCount} unread
+                            </span>
                           )}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+                        <button
+                          onClick={() => setActiveTab('messages')}
+                          className="text-emerald-400 text-sm hover:text-emerald-300"
+                        >
+                          View All →
+                        </button>
+                      </div>
 
-              {/* Appointments Section */}
-              <div className="dashboard-card p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-semibold text-white">Appointments</h3>
-                  <div className="flex items-center gap-3">
-                    <span className="text-slate-400 text-sm">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium px-3 py-1 rounded-lg transition-colors"
-                    >
-                      Schedule New
-                    </motion.button>
+                      {doctorMessagesLoading ? (
+                        <div className="flex flex-col items-center justify-center py-6 text-center">
+                          <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                          <p className="text-slate-400 text-sm">Loading messages...</p>
+                        </div>
+                      ) : doctorMessages.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                          </div>
+                          <h4 className="font-medium text-white mb-2">No messages yet</h4>
+                          <p className="text-slate-400 text-sm">Patient messages will appear here</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {doctorMessages.slice(-3).map((message) => (
+                            <div key={message.id} className="flex items-start gap-3 p-3 bg-slate-800/40 rounded-lg border border-slate-700/30">
+                              <div className="w-9 h-9 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                                <span className="text-emerald-400 text-xs font-semibold">
+                                  {message.sentBy === 'DOCTOR'
+                                    ? 'ME'
+                                    : (selectedPatient?.name?.charAt(0).toUpperCase() || 'P')}
+                                </span>
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-slate-300 text-xs mb-1">
+                                  {message.sentBy === 'PATIENT'
+                                    ? `${selectedPatient?.name || 'Patient'} sent you a message`
+                                    : `You to ${selectedPatient?.name || 'patient'}`}
+                                </p>
+                                <p className="text-white text-sm truncate">{message.content}</p>
+                                {message.createdAt && (
+                                  <p className="text-slate-400 text-xs mt-1">
+                                    {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Patients */}
+                    <div className="dashboard-card p-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="font-semibold text-white">Recent Patients</h3>
+                        <button
+                          onClick={() => setActiveTab('patients')}
+                          className="text-emerald-400 text-sm hover:text-emerald-300"
+                        >
+                          View All →
+                        </button>
+                      </div>
+
+                      {patientsLoading ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                            </svg>
+                          </div>
+                          <h4 className="font-medium text-white mb-2">Loading patients...</h4>
+                        </div>
+                      ) : assignedPatients.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                            </svg>
+                          </div>
+                          <h4 className="font-medium text-white mb-2">No patients assigned yet</h4>
+                          <p className="text-slate-400 text-sm">Assigned patients will appear here</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {assignedPatients.slice(0, 3).map(patient => (
+                            <div key={patient.id} className="flex items-center gap-3 p-3 bg-slate-900/60 rounded-lg">
+                              <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                                <span className="text-emerald-400 font-semibold">
+                                  {patient.name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-white text-sm font-medium truncate">{patient.name}</p>
+                                <p className="text-slate-400 text-xs truncate">{patient.email}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Records */}
+                    <div className="dashboard-card p-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="font-semibold text-white">Recent Records</h3>
+                        <button
+                          onClick={() => setActiveTab('records')}
+                          className="text-emerald-400 text-sm hover:text-emerald-300"
+                        >
+                          View All →
+                        </button>
+                      </div>
+
+                      {!dashboardData?.recentRecords || dashboardData.recentRecords.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
+                          <h4 className="font-medium text-white mb-2">No records accessed yet</h4>
+                          <p className="text-slate-400 text-sm">Patient records will appear here</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {dashboardData.recentRecords.map((record: any) => (
+                            <div key={record.id} className="flex items-start justify-between p-3 bg-slate-900/60 rounded-lg">
+                              <div className="min-w-0">
+                                <p className="text-white text-sm font-medium truncate">{record.title}</p>
+                                <p className="text-slate-400 text-xs truncate">
+                                  {record.patient?.name || 'Patient'} • {record.recordType?.replace('_', ' ') || 'Record'}
+                                </p>
+                                {record.uploadedAt && (
+                                  <p className="text-slate-500 text-[11px] mt-1">
+                                    {new Date(record.uploadedAt).toLocaleDateString()}
+                                  </p>
+                                )}
+                              </div>
+                              {record.fileUrl && (
+                                <a
+                                  href={record.fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-emerald-400 hover:text-emerald-300 text-xs"
+                                >
+                                  View
+                                </a>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
-                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+
+                  {/* Appointments Section */}
+                  <div className="dashboard-card p-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="font-semibold text-white">Appointments</h3>
+                      <div className="flex items-center gap-3">
+                        <span className="text-slate-400 text-sm">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium px-3 py-1 rounded-lg transition-colors"
+                        >
+                          Schedule New
+                        </motion.button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <div className="w-16 h-16 empty-state-icon rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <h4 className="font-medium text-white mb-2">No appointments scheduled</h4>
+                      <p className="text-slate-400 text-sm mb-4">Your upcoming appointments will appear here</p>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="bg-slate-700 hover:bg-slate-600 text-white text-sm px-4 py-2 rounded-lg transition-colors"
+                      >
+                        Create Appointment
+                      </motion.button>
+                    </div>
                   </div>
-                  <h4 className="font-medium text-white mb-2">No appointments scheduled</h4>
-                  <p className="text-slate-400 text-sm mb-4">Your upcoming appointments will appear here</p>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-slate-700 hover:bg-slate-600 text-white text-sm px-4 py-2 rounded-lg transition-colors"
-                  >
-                    Create Appointment
-                  </motion.button>
-                </div>
-              </div>
                 </>
               )}
             </>
@@ -1131,7 +1119,7 @@ export default function DoctorDashboard() {
                   <span className="text-amber-200">Open a chat to mark read</span>
                 </div>
               )}
-              
+
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Conversations List */}
                 <div className="messages-panel messages-sidebar bg-slate-900/40 border border-slate-700/50 rounded-2xl p-5">
@@ -1356,7 +1344,7 @@ export default function DoctorDashboard() {
                   </motion.button>
                 </div>
               </div>
-              
+
               <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8">
                 {accessRequestsError && (
                   <div className="mb-4 bg-red-500/10 border border-red-500/30 text-red-300 text-sm rounded-lg px-4 py-3">
@@ -1422,13 +1410,12 @@ export default function DoctorDashboard() {
                             {metric.unit ? ` ${metric.unit}` : ''}
                           </p>
                           <span
-                            className={`inline-flex mt-2 text-[11px] px-2 py-1 rounded-full border ${
-                              metric.status === 'high'
-                                ? 'bg-red-500/10 text-red-300 border-red-500/30'
-                                : metric.status === 'low'
+                            className={`inline-flex mt-2 text-[11px] px-2 py-1 rounded-full border ${metric.status === 'high'
+                              ? 'bg-red-500/10 text-red-300 border-red-500/30'
+                              : metric.status === 'low'
                                 ? 'bg-yellow-500/10 text-yellow-300 border-yellow-500/30'
                                 : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                            }`}
+                              }`}
                           >
                             {metric.status}
                           </span>
@@ -1510,7 +1497,7 @@ export default function DoctorDashboard() {
                   {accessRequestsError}
                 </div>
               )}
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">Pending Requests</h3>
@@ -1544,7 +1531,7 @@ export default function DoctorDashboard() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">Approved Requests</h3>
                   {accessRequestsLoading ? (
@@ -1595,7 +1582,7 @@ export default function DoctorDashboard() {
               <Dialog.Description className="text-slate-400 mb-6">
                 Select an assigned patient to request access to their medical records and health metrics.
               </Dialog.Description>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -1628,7 +1615,7 @@ export default function DoctorDashboard() {
                     </select>
                   )}
                 </div>
-                
+
                 <div className="flex gap-3 pt-4">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -1765,7 +1752,7 @@ export default function DoctorDashboard() {
               <Dialog.Description className="text-slate-400 mb-6">
                 Add a patient to your practice. They will receive an invitation to connect their records.
               </Dialog.Description>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -1779,7 +1766,7 @@ export default function DoctorDashboard() {
                     className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   />
                 </div>
-                
+
                 <div className="flex gap-3 pt-4">
                   <motion.button
                     whileHover={{ scale: 1.02 }}

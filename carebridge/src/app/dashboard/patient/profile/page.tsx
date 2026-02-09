@@ -20,7 +20,7 @@ interface ProfileData {
   primaryProblem?: string
   symptoms?: string[]
   consultationPreference?: string
-  
+
   // Level 2 - Recommended
   medicalHistory?: string
   currentMedications?: string[]
@@ -34,7 +34,7 @@ interface ProfileData {
     drinking: string
     exercise: string
   }
-  
+
   // Level 3 - Advanced (Vitals)
   vitalsBp?: string
   vitalsSugar?: string
@@ -303,11 +303,10 @@ export default function PatientProfile() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setActiveLevel(level)}
-              className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                activeLevel === level
-                  ? `bg-${color}-500/20 text-${color}-400 border border-${color}-500/30`
-                  : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
-              }`}
+              className={`px-6 py-3 rounded-lg font-medium transition-all ${activeLevel === level
+                ? `bg-${color}-500/20 text-${color}-400 border border-${color}-500/30`
+                : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
+                }`}
             >
               <div className="flex items-center gap-2">
                 {required && <span className="w-2 h-2 bg-red-500 rounded-full" />}
@@ -345,7 +344,7 @@ export default function PatientProfile() {
                     type="number"
                     value={profileData.age || ''}
                     onChange={(e) => updateProfileData('age', parseInt(e.target.value))}
-                    className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     placeholder="Enter your age"
                   />
                 </div>
@@ -440,11 +439,10 @@ export default function PatientProfile() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => updateProfileData('consultationPreference', option.value)}
-                        className={`p-3 rounded-lg border transition-all ${
-                          profileData.consultationPreference === option.value
-                            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                            : 'bg-slate-900 border-slate-600 text-slate-300 hover:border-slate-500'
-                        }`}
+                        className={`p-3 rounded-lg border transition-all ${profileData.consultationPreference === option.value
+                          ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                          : 'bg-slate-900 border-slate-600 text-slate-300 hover:border-slate-500'
+                          }`}
                       >
                         {option.label}
                       </motion.button>
@@ -546,7 +544,7 @@ export default function PatientProfile() {
                       placeholder="Phone number"
                       className="px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                     />
-                    <select 
+                    <select
                       value={profileData.emergencyContact?.relationship || ''}
                       onChange={(e) => updateProfileData('emergencyContact', {
                         ...profileData.emergencyContact,
@@ -581,11 +579,10 @@ export default function PatientProfile() {
                               ...profileData.lifestyle,
                               smoking: option
                             })}
-                            className={`px-3 py-2 text-sm border rounded-lg transition-colors ${
-                              profileData.lifestyle?.smoking === option
-                                ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
-                                : 'bg-slate-900 border-slate-600 text-slate-300 hover:border-slate-500'
-                            }`}
+                            className={`px-3 py-2 text-sm border rounded-lg transition-colors ${profileData.lifestyle?.smoking === option
+                              ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
+                              : 'bg-slate-900 border-slate-600 text-slate-300 hover:border-slate-500'
+                              }`}
                           >
                             {option}
                           </button>
@@ -602,11 +599,10 @@ export default function PatientProfile() {
                               ...profileData.lifestyle,
                               drinking: option
                             })}
-                            className={`px-3 py-2 text-sm border rounded-lg transition-colors ${
-                              profileData.lifestyle?.drinking === option
-                                ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
-                                : 'bg-slate-900 border-slate-600 text-slate-300 hover:border-slate-500'
-                            }`}
+                            className={`px-3 py-2 text-sm border rounded-lg transition-colors ${profileData.lifestyle?.drinking === option
+                              ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
+                              : 'bg-slate-900 border-slate-600 text-slate-300 hover:border-slate-500'
+                              }`}
                           >
                             {option}
                           </button>
@@ -615,7 +611,7 @@ export default function PatientProfile() {
                     </div>
                     <div className="space-y-2">
                       <span className="text-sm text-slate-400">Exercise</span>
-                      <select 
+                      <select
                         value={profileData.lifestyle?.exercise || ''}
                         onChange={(e) => updateProfileData('lifestyle', {
                           ...profileData.lifestyle,
