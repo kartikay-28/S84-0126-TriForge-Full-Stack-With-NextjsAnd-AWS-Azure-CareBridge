@@ -9,6 +9,7 @@ import * as Toast from '@radix-ui/react-toast'
 import AuthFlipWrapper from '../AuthFlipWrapper'
 import LampToggle from '@/components/LampToggle'
 import Logo from '@/components/Logo'
+import BackgroundAnimation from '@/components/BackgroundAnimation'
 
 // Validation schema
 const loginSchema = z.object({
@@ -82,6 +83,7 @@ export default function LoginPage() {
   return (
     <AuthFlipWrapper flipKey="login">
       <Toast.Provider swipeDirection="right">
+        <BackgroundAnimation />
         <motion.main
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
