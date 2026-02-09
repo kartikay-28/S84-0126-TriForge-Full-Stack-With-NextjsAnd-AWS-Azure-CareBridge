@@ -78,7 +78,7 @@ export default function SignupPage() {
   return (
     <AuthFlipWrapper flipKey="signup">
       <Toast.Provider swipeDirection="right">
-        <motion.main 
+        <motion.main
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -89,11 +89,11 @@ export default function SignupPage() {
           <div className="fixed top-6 right-6 z-50">
             <LampToggle />
           </div>
-          
+
           <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-16 items-center">
-            
+
             {/* Left Side - Welcome Content */}
-            <motion.div 
+            <motion.div
               initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -110,7 +110,7 @@ export default function SignupPage() {
               </motion.a>
 
               <div className="space-y-6">
-                <motion.h1 
+                <motion.h1
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.3 }}
@@ -118,26 +118,26 @@ export default function SignupPage() {
                 >
                   Healthcare
                 </motion.h1>
-                <motion.p 
+                <motion.p
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.4 }}
                   className="text-slate-300 text-lg leading-relaxed max-w-lg"
                 >
-                  Whether you're a patient taking control of your health records, or a 
-                  doctor seeking seamless access to patient data — CareBridge has you 
+                  Whether you're a patient taking control of your health records, or a
+                  doctor seeking seamless access to patient data — CareBridge has you
                   covered.
                 </motion.p>
               </div>
 
               {/* Feature Cards */}
-              <motion.div 
+              <motion.div
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
                 className="space-y-4 max-w-lg"
               >
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.02, x: 10 }}
                   className="clean-card p-4 flex items-center gap-4"
                 >
@@ -148,8 +148,8 @@ export default function SignupPage() {
                     <p className="text-white font-medium text-sm">Store, manage, and share your health records securely</p>
                   </div>
                 </motion.div>
-                
-                <motion.div 
+
+                <motion.div
                   whileHover={{ scale: 1.02, x: 10 }}
                   className="clean-card p-4 flex items-center gap-4"
                 >
@@ -164,13 +164,13 @@ export default function SignupPage() {
             </motion.div>
 
             {/* Right Side - Signup Form */}
-            <motion.div 
+            <motion.div
               initial={{ x: 50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
               className="max-w-md mx-auto w-full"
             >
-              <motion.div 
+              <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
@@ -182,7 +182,7 @@ export default function SignupPage() {
               </motion.div>
 
               {/* Role Selection with improved animations */}
-              <motion.div 
+              <motion.div
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
@@ -193,14 +193,13 @@ export default function SignupPage() {
                   onClick={() => setValue('role', 'PATIENT')}
                   whileHover={{ scale: 1.05, y: -5 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`group p-6 rounded-xl border transition-all duration-300 ${
-                    watchedRole === 'PATIENT'
-                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-lg shadow-emerald-500/25'
-                      : 'clean-card text-slate-300 hover:border-slate-600'
-                  }`}
+                  className={`group p-6 rounded-xl border transition-all duration-300 ${watchedRole === 'PATIENT'
+                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-lg shadow-emerald-500/25'
+                    : 'clean-card text-slate-300 hover:border-slate-600'
+                    }`}
                 >
                   <div className="text-center">
-                    <motion.div 
+                    <motion.div
                       animate={{ rotate: watchedRole === 'PATIENT' ? [0, 10, -10, 0] : 0 }}
                       transition={{ duration: 0.5 }}
                       className="text-3xl mb-3"
@@ -211,20 +210,19 @@ export default function SignupPage() {
                     <p className="text-xs opacity-75">Patient Portal</p>
                   </div>
                 </motion.button>
-                
+
                 <motion.button
                   type="button"
                   onClick={() => setValue('role', 'DOCTOR')}
                   whileHover={{ scale: 1.05, y: -5 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`group p-6 rounded-xl border transition-all duration-300 ${
-                    watchedRole === 'DOCTOR'
-                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-lg shadow-emerald-500/25'
-                      : 'clean-card text-slate-300 hover:border-slate-600'
-                  }`}
+                  className={`group p-6 rounded-xl border transition-all duration-300 ${watchedRole === 'DOCTOR'
+                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-lg shadow-emerald-500/25'
+                    : 'clean-card text-slate-300 hover:border-slate-600'
+                    }`}
                 >
                   <div className="text-center">
-                    <motion.div 
+                    <motion.div
                       animate={{ rotate: watchedRole === 'DOCTOR' ? [0, 10, -10, 0] : 0 }}
                       transition={{ duration: 0.5 }}
                       className="text-3xl mb-3"
@@ -237,7 +235,7 @@ export default function SignupPage() {
                 </motion.button>
               </motion.div>
               {errors.role && (
-                <motion.p 
+                <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="text-red-400 text-sm mb-4 text-center"
@@ -246,19 +244,19 @@ export default function SignupPage() {
                 </motion.p>
               )}
 
-              <motion.form 
+              <motion.form
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
-                onSubmit={handleSubmit(onSubmit)} 
+                onSubmit={handleSubmit(onSubmit)}
                 className="space-y-4"
               >
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.01 }}
                   className="group"
                 >
                   <input
-                    {...register('name', { 
+                    {...register('name', {
                       required: 'Name is required',
                       minLength: { value: 2, message: 'Name must be at least 2 characters' }
                     })}
@@ -268,7 +266,7 @@ export default function SignupPage() {
                   />
                   <AnimatePresence>
                     {errors.name && (
-                      <motion.p 
+                      <motion.p
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
@@ -280,12 +278,12 @@ export default function SignupPage() {
                   </AnimatePresence>
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.01 }}
                   className="group"
                 >
                   <input
-                    {...register('email', { 
+                    {...register('email', {
                       required: 'Email is required',
                       pattern: { value: /^\S+@\S+$/i, message: 'Please enter a valid email address' }
                     })}
@@ -296,7 +294,7 @@ export default function SignupPage() {
                   />
                   <AnimatePresence>
                     {errors.email && (
-                      <motion.p 
+                      <motion.p
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
@@ -308,12 +306,12 @@ export default function SignupPage() {
                   </AnimatePresence>
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.01 }}
                   className="relative group"
                 >
                   <input
-                    {...register('password', { 
+                    {...register('password', {
                       required: 'Password is required',
                       minLength: { value: 6, message: 'Password must be at least 6 characters' }
                     })}
@@ -332,27 +330,27 @@ export default function SignupPage() {
                   >
                     <AnimatePresence mode="wait">
                       {showPassword ? (
-                        <motion.svg 
+                        <motion.svg
                           key="hide"
                           initial={{ opacity: 0, rotate: 180 }}
                           animate={{ opacity: 1, rotate: 0 }}
                           exit={{ opacity: 0, rotate: -180 }}
-                          className="w-5 h-5" 
-                          fill="none" 
-                          viewBox="0 0 24 24" 
+                          className="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
                           stroke="currentColor"
                         >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
                         </motion.svg>
                       ) : (
-                        <motion.svg 
+                        <motion.svg
                           key="show"
                           initial={{ opacity: 0, rotate: 180 }}
                           animate={{ opacity: 1, rotate: 0 }}
                           exit={{ opacity: 0, rotate: -180 }}
-                          className="w-5 h-5" 
-                          fill="none" 
-                          viewBox="0 0 24 24" 
+                          className="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
                           stroke="currentColor"
                         >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -361,35 +359,34 @@ export default function SignupPage() {
                       )}
                     </AnimatePresence>
                   </motion.button>
-                  
+
                   {/* Password Strength Indicator */}
                   <div className="flex items-center mt-2">
                     <div className="h-1 flex-1 bg-slate-700 rounded-full mr-2 overflow-hidden">
-                      <motion.div 
+                      <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${passwordStrength}%` }}
                         transition={{ duration: 0.3 }}
-                        className={`h-full transition-colors duration-300 ${
-                          passwordStrength >= 100 ? 'bg-emerald-500' : 
+                        className={`h-full transition-colors duration-300 ${passwordStrength >= 100 ? 'bg-emerald-500' :
                           passwordStrength >= 50 ? 'bg-yellow-500' : 'bg-red-500'
-                        }`}
+                          }`}
                       />
                     </div>
-                    <motion.p 
-                      animate={{ 
-                        color: passwordStrength >= 100 ? '#10b981' : 
-                               passwordStrength >= 50 ? '#eab308' : '#ef4444' 
+                    <motion.p
+                      animate={{
+                        color: passwordStrength >= 100 ? '#10b981' :
+                          passwordStrength >= 50 ? '#eab308' : '#ef4444'
                       }}
                       className="text-xs"
                     >
-                      {passwordStrength >= 100 ? 'Strong ✓' : 
-                       passwordStrength >= 50 ? 'Medium' : 'Weak'}
+                      {passwordStrength >= 100 ? 'Strong ✓' :
+                        passwordStrength >= 50 ? 'Medium' : 'Weak'}
                     </motion.p>
                   </div>
-                  
+
                   <AnimatePresence>
                     {errors.password && (
-                      <motion.p 
+                      <motion.p
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
@@ -401,8 +398,8 @@ export default function SignupPage() {
                   </AnimatePresence>
                 </motion.div>
 
-                <motion.button 
-                  type="submit" 
+                <motion.button
+                  type="submit"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   disabled={isSubmitting || !isValid}
@@ -417,11 +414,11 @@ export default function SignupPage() {
                         exit={{ opacity: 0 }}
                         className="flex items-center gap-2"
                       >
-                        <motion.svg 
+                        <motion.svg
                           animate={{ rotate: 360 }}
                           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                          className="h-5 w-5" 
-                          fill="none" 
+                          className="h-5 w-5"
+                          fill="none"
                           viewBox="0 0 24 24"
                         >
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -450,7 +447,7 @@ export default function SignupPage() {
                 </motion.button>
               </motion.form>
 
-              <motion.p 
+              <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
@@ -471,11 +468,10 @@ export default function SignupPage() {
 
         {/* Toast Notifications */}
         <Toast.Root
-          className={`${
-            toastMessage.type === 'success' 
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
-              : 'bg-red-500/10 border-red-500/30 text-red-300'
-          } rounded-xl border p-4 shadow-lg`}
+          className={`${toastMessage.type === 'success'
+            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+            : 'bg-red-500/10 border-red-500/30 text-red-300'
+            } rounded-xl border p-4 shadow-lg`}
           open={toastOpen}
           onOpenChange={setToastOpen}
         >

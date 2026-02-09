@@ -22,7 +22,7 @@ interface DoctorProfileData {
   conditionsTreated?: string[]
   consultationMode?: string[]
   availability?: string
-  
+
   // Level 2 - Recommended
   qualifications?: string[]
   clinicInfo?: {
@@ -32,7 +32,7 @@ interface DoctorProfileData {
   }
   consultationFee?: number
   languagesSpoken?: string[]
-  
+
   // Level 3 - Advanced
   licenseDocument?: string
   bio?: string
@@ -50,7 +50,7 @@ export default function DoctorProfile() {
   // Profile hooks
   const { fetchBasicProfile, fetchRecommendedProfile, fetchAdvancedProfile, updateBasicProfile, updateRecommendedProfile, updateAdvancedProfile, isLoading, error } = useDoctorProfile()
   const { dashboardData, refetch } = useDoctorDashboard()
-  
+
   // File upload hook
   const { uploadFile, isUploading } = useDoctorFileUpload()
 
@@ -128,13 +128,13 @@ export default function DoctorProfile() {
             licenseDocument: profile.licenseDocument || '',
             bio: profile.bio || ''
           }))
-          
+
           // If there's a license document URL, extract the filename for display
           if (profile.licenseDocument) {
             const fileName = profile.licenseDocument.split('/').pop() || 'License Document'
             setUploadedLicenseFile(fileName)
           }
-          
+
           setProfileExists(prev => ({ ...prev, advanced: true }))
         }
       } catch (error) {
@@ -217,7 +217,7 @@ export default function DoctorProfile() {
         ...metadata,
         recordType: 'license_document'
       })
-      
+
       if (result.record && result.record.fileUrl) {
         // Update the license document URL in profile data
         setProfileData(prev => ({
@@ -324,11 +324,10 @@ export default function DoctorProfile() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setActiveLevel(level)}
-              className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                activeLevel === level
-                  ? `bg-${color}-500/20 text-${color}-400 border border-${color}-500/30`
-                  : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
-              }`}
+              className={`px-6 py-3 rounded-lg font-medium transition-all ${activeLevel === level
+                ? `bg-${color}-500/20 text-${color}-400 border border-${color}-500/30`
+                : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
+                }`}
             >
               <div className="flex items-center gap-2">
                 {required && <span className="w-2 h-2 bg-red-500 rounded-full" />}
@@ -426,11 +425,10 @@ export default function DoctorProfile() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => updateProfileData('consultationMode', [mode.value])}
-                        className={`p-3 rounded-lg border transition-all ${
-                          profileData.consultationMode?.includes(mode.value)
-                            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                            : 'bg-slate-900 border-slate-600 text-slate-300 hover:border-slate-500'
-                        }`}
+                        className={`p-3 rounded-lg border transition-all ${profileData.consultationMode?.includes(mode.value)
+                          ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                          : 'bg-slate-900 border-slate-600 text-slate-300 hover:border-slate-500'
+                          }`}
                       >
                         {mode.label}
                       </motion.button>
@@ -619,7 +617,7 @@ export default function DoctorProfile() {
                   <label className="block text-sm font-medium text-slate-300 mb-2">
                     Medical License Document
                   </label>
-                  
+
                   {profileData.licenseDocument || uploadedLicenseFile ? (
                     <div className="bg-slate-900 border border-slate-600 rounded-lg p-4">
                       <div className="flex items-center justify-between">
@@ -659,7 +657,7 @@ export default function DoctorProfile() {
                       </div>
                     </div>
                   ) : (
-                    <div 
+                    <div
                       onClick={() => setShowUploadModal(true)}
                       className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center cursor-pointer hover:border-slate-500 transition-colors"
                     >
@@ -671,7 +669,7 @@ export default function DoctorProfile() {
                       <p className="text-slate-500 text-xs mt-2">Supported formats: PDF, JPG, PNG (Max 10MB)</p>
                     </div>
                   )}
-                  
+
                   <p className="text-xs text-slate-500 mt-2">Upload your medical license document for professional verification</p>
                 </div>
 

@@ -62,7 +62,7 @@ export default function LoginPage() {
         localStorage.setItem('userName', result.name)
 
         showToast('success', `Welcome back, ${result.name}! Redirecting to your ${result.role.toLowerCase()} dashboard...`)
-        
+
         // Redirect based on role
         setTimeout(() => {
           if (result.role === 'DOCTOR') {
@@ -82,7 +82,7 @@ export default function LoginPage() {
   return (
     <AuthFlipWrapper flipKey="login">
       <Toast.Provider swipeDirection="right">
-        <motion.main 
+        <motion.main
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -93,11 +93,11 @@ export default function LoginPage() {
           <div className="fixed top-6 right-6 z-50">
             <LampToggle />
           </div>
-          
+
           <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-16 items-center">
-            
+
             {/* Left Side - Welcome Content */}
-            <motion.div 
+            <motion.div
               initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -114,7 +114,7 @@ export default function LoginPage() {
               </motion.a>
 
               <div className="space-y-6">
-                <motion.h1 
+                <motion.h1
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.3 }}
@@ -122,7 +122,7 @@ export default function LoginPage() {
                 >
                   Welcome back
                 </motion.h1>
-                <motion.p 
+                <motion.p
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.4 }}
@@ -133,13 +133,13 @@ export default function LoginPage() {
               </div>
 
               {/* Feature Cards */}
-              <motion.div 
+              <motion.div
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
                 className="space-y-4 max-w-md"
               >
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.02, x: 10 }}
                   className="clean-card p-4 flex items-center gap-4"
                 >
@@ -150,8 +150,8 @@ export default function LoginPage() {
                     <p className="text-white font-medium text-sm">End-to-end encrypted</p>
                   </div>
                 </motion.div>
-                
-                <motion.div 
+
+                <motion.div
                   whileHover={{ scale: 1.02, x: 10 }}
                   className="clean-card p-4"
                 >
@@ -163,26 +163,26 @@ export default function LoginPage() {
             </motion.div>
 
             {/* Right Side - Login Form */}
-            <motion.div 
+            <motion.div
               initial={{ x: 50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
               className="max-w-md mx-auto w-full"
             >
-              <motion.form 
+              <motion.form
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                onSubmit={handleSubmit(onSubmit)} 
+                onSubmit={handleSubmit(onSubmit)}
                 className="space-y-6"
               >
                 <div className="space-y-4">
-                  <motion.div 
+                  <motion.div
                     whileHover={{ scale: 1.01 }}
                     className="group"
                   >
                     <input
-                      {...register('email', { 
+                      {...register('email', {
                         required: 'Email is required',
                         pattern: { value: /^\S+@\S+$/i, message: 'Please enter a valid email address' }
                       })}
@@ -193,7 +193,7 @@ export default function LoginPage() {
                     />
                     <AnimatePresence>
                       {errors.email && (
-                        <motion.p 
+                        <motion.p
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
@@ -205,12 +205,12 @@ export default function LoginPage() {
                     </AnimatePresence>
                   </motion.div>
 
-                  <motion.div 
+                  <motion.div
                     whileHover={{ scale: 1.01 }}
                     className="relative group"
                   >
                     <input
-                      {...register('password', { 
+                      {...register('password', {
                         required: 'Password is required'
                       })}
                       type={showPassword ? 'text' : 'password'}
@@ -228,27 +228,27 @@ export default function LoginPage() {
                     >
                       <AnimatePresence mode="wait">
                         {showPassword ? (
-                          <motion.svg 
+                          <motion.svg
                             key="hide"
                             initial={{ opacity: 0, rotate: 180 }}
                             animate={{ opacity: 1, rotate: 0 }}
                             exit={{ opacity: 0, rotate: -180 }}
-                            className="w-5 h-5" 
-                            fill="none" 
-                            viewBox="0 0 24 24" 
+                            className="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
                             stroke="currentColor"
                           >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
                           </motion.svg>
                         ) : (
-                          <motion.svg 
+                          <motion.svg
                             key="show"
                             initial={{ opacity: 0, rotate: 180 }}
                             animate={{ opacity: 1, rotate: 0 }}
                             exit={{ opacity: 0, rotate: -180 }}
-                            className="w-5 h-5" 
-                            fill="none" 
-                            viewBox="0 0 24 24" 
+                            className="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
                             stroke="currentColor"
                           >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -259,7 +259,7 @@ export default function LoginPage() {
                     </motion.button>
                     <AnimatePresence>
                       {errors.password && (
-                        <motion.p 
+                        <motion.p
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
@@ -272,8 +272,8 @@ export default function LoginPage() {
                   </motion.div>
                 </div>
 
-                <motion.button 
-                  type="submit" 
+                <motion.button
+                  type="submit"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   disabled={isSubmitting}
@@ -288,11 +288,11 @@ export default function LoginPage() {
                         exit={{ opacity: 0 }}
                         className="flex items-center gap-2"
                       >
-                        <motion.svg 
+                        <motion.svg
                           animate={{ rotate: 360 }}
                           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                          className="h-5 w-5" 
-                          fill="none" 
+                          className="h-5 w-5"
+                          fill="none"
                           viewBox="0 0 24 24"
                         >
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -321,7 +321,7 @@ export default function LoginPage() {
                 </motion.button>
               </motion.form>
 
-              <motion.p 
+              <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
@@ -342,11 +342,10 @@ export default function LoginPage() {
 
         {/* Toast Notifications */}
         <Toast.Root
-          className={`${
-            toastMessage.type === 'success' 
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
-              : 'bg-red-500/10 border-red-500/30 text-red-300'
-          } rounded-xl border p-4 shadow-lg`}
+          className={`${toastMessage.type === 'success'
+            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+            : 'bg-red-500/10 border-red-500/30 text-red-300'
+            } rounded-xl border p-4 shadow-lg`}
           open={toastOpen}
           onOpenChange={setToastOpen}
         >
