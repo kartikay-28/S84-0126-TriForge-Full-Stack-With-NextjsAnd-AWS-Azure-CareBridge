@@ -40,11 +40,11 @@ export default function PatientDashboard() {
   const { dashboardData, isLoading: dashboardLoading } = useDashboard()
 
   // Doctors hook to get all doctors and recommendations
-  const { 
-    allDoctors, 
-    recommendedDoctors, 
-    isLoadingAll, 
-    isLoadingRecommended, 
+  const {
+    allDoctors,
+    recommendedDoctors,
+    isLoadingAll,
+    isLoadingRecommended,
     error: doctorsError,
     fetchAllDoctors,
     fetchRecommendedDoctors,
@@ -259,7 +259,7 @@ export default function PatientDashboard() {
 
   useEffect(() => {
     setMounted(true)
-    
+
     // Check if user has acknowledged the profile update
     const acknowledged = localStorage.getItem('profileUpdateAcknowledged')
     if (!acknowledged) {
@@ -699,17 +699,10 @@ export default function PatientDashboard() {
                     initial={{ opacity: 0, scale: 0.95, y: -10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                    className="absolute bg-slate-800 border border-slate-700 rounded-lg shadow-2xl w-48 py-2"
+                    className="absolute top-20 right-6 bg-slate-900/98 border border-slate-700/50 rounded-lg shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.1)] w-48 py-2 z-[1000000] backdrop-blur-xl"
                     style={{
-                      top: '80px',
-                      right: '24px',
-                      zIndex: 1000000,
-                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)',
-                      backgroundColor: 'rgba(30, 41, 59, 0.98)',
-                      border: '1px solid rgba(148, 163, 184, 0.2)'
-                    }}
+                      zIndex: 1000000
+                    } as any}
                   >
                     <div className="px-4 py-3 border-b border-slate-700">
                       <p className="font-semibold text-white">{user?.name || 'Patient'}</p>
@@ -854,16 +847,15 @@ export default function PatientDashboard() {
                               <div key={metric.id} className={`bg-slate-900/60 rounded-lg p-4 hover-lift hover-glow animate-stagger-${index + 1}`}>
                                 <div className="flex items-center justify-between mb-2">
                                   <span className="text-sm text-slate-400">{metric.type}</span>
-                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    metric.status === 'normal' ? 'bg-green-500/20 text-green-400' :
+                                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${metric.status === 'normal' ? 'bg-green-500/20 text-green-400' :
                                     metric.status === 'high' ? 'bg-red-500/20 text-red-400' :
-                                    metric.status === 'low' ? 'bg-yellow-500/20 text-yellow-400' :
-                                    'bg-slate-500/20 text-slate-400'
-                                  }`}>
+                                      metric.status === 'low' ? 'bg-yellow-500/20 text-yellow-400' :
+                                        'bg-slate-500/20 text-slate-400'
+                                    }`}>
                                     {metric.status === 'normal' ? 'Healthy Range' :
-                                     metric.status === 'high' ? 'Above Normal' :
-                                     metric.status === 'low' ? 'Below Normal' :
-                                     'No Status'}
+                                      metric.status === 'high' ? 'Above Normal' :
+                                        metric.status === 'low' ? 'Below Normal' :
+                                          'No Status'}
                                   </div>
                                 </div>
                                 <p className="text-lg font-semibold text-white">
@@ -1058,7 +1050,7 @@ export default function PatientDashboard() {
                               ) : (
                                 <div className="space-y-3">
                                   {messages.slice(-3).map((message) => (
-                                    <div key={message.id} className="flex items-start gap-3 p-3 bg-slate-900/60 rounded-lg">
+                                    <div key={message.id} className="flex items-start gap-3 p-3 bg-slate-800/40 rounded-lg border border-slate-700/30">
                                       <div className="w-9 h-9 bg-emerald-500/20 rounded-full flex items-center justify-center">
                                         <span className="text-emerald-400 text-xs font-semibold">
                                           {message.sentBy === 'PATIENT' ? 'ME' : 'DR'}
@@ -1763,9 +1755,9 @@ export default function PatientDashboard() {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                         {recommendedDoctors.map((doctor, index) => (
-                          <DoctorCard 
-                            key={doctor.doctorId} 
-                            doctor={doctor} 
+                          <DoctorCard
+                            key={doctor.doctorId}
+                            doctor={doctor}
                             onAssign={assignDoctor}
                             index={index}
                             isRecommended={true}
@@ -1793,9 +1785,9 @@ export default function PatientDashboard() {
                         // Check if this doctor is in the recommended list
                         const isRecommended = recommendedDoctors.some(rec => rec.doctorId === doctor.doctorId)
                         return (
-                          <DoctorCard 
-                            key={doctor.doctorId} 
-                            doctor={doctor} 
+                          <DoctorCard
+                            key={doctor.doctorId}
+                            doctor={doctor}
                             onAssign={assignDoctor}
                             index={index + recommendedDoctors.length}
                             isRecommended={isRecommended}
@@ -1945,7 +1937,7 @@ function DoctorCard({ doctor, onAssign, index, isRecommended = false }: DoctorCa
 
   const handleAssign = async () => {
     if (doctor.isCurrentlyAssigned) return
-    
+
     setIsAssigning(true)
     try {
       await onAssign(doctor.doctorId)
@@ -1962,11 +1954,10 @@ function DoctorCard({ doctor, onAssign, index, isRecommended = false }: DoctorCa
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className={`bg-slate-800/50 border rounded-xl p-6 hover-lift ${
-        isRecommended 
-          ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-slate-800/50' 
-          : 'border-slate-700/50'
-      }`}
+      className={`bg-slate-800/50 border rounded-xl p-6 hover-lift ${isRecommended
+        ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-slate-800/50'
+        : 'border-slate-700/50'
+        }`}
     >
       {isRecommended && (
         <div className="flex items-center gap-2 mb-4">
@@ -1998,7 +1989,7 @@ function DoctorCard({ doctor, onAssign, index, isRecommended = false }: DoctorCa
             <p className="text-emerald-400 text-sm font-medium">{doctor.specialization}</p>
           </div>
         </div>
-        
+
         {doctor.isCurrentlyAssigned && (
           <div className="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-full">
             Assigned
@@ -2013,7 +2004,7 @@ function DoctorCard({ doctor, onAssign, index, isRecommended = false }: DoctorCa
           </svg>
           <span>{doctor.yearsOfExperience} years experience</span>
         </div>
-        
+
         {doctor.hospital && (
           <div className="flex items-center gap-2 text-sm text-slate-300">
             <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2022,7 +2013,7 @@ function DoctorCard({ doctor, onAssign, index, isRecommended = false }: DoctorCa
             <span>{doctor.hospital}</span>
           </div>
         )}
-        
+
         {doctor.consultationMode && (
           <div className="flex items-center gap-2 text-sm text-slate-300">
             <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2045,19 +2036,18 @@ function DoctorCard({ doctor, onAssign, index, isRecommended = false }: DoctorCa
         whileTap={{ scale: doctor.isCurrentlyAssigned ? 1 : 0.98 }}
         onClick={handleAssign}
         disabled={doctor.isCurrentlyAssigned || isAssigning}
-        className={`assigned-action-btn w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-          doctor.isCurrentlyAssigned
-            ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
-            : isAssigning
+        className={`assigned-action-btn w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${doctor.isCurrentlyAssigned
+          ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+          : isAssigning
             ? 'bg-emerald-600 text-white cursor-wait'
             : 'bg-emerald-500 hover:bg-emerald-600 text-white'
-        }`}
+          }`}
       >
-        {doctor.isCurrentlyAssigned 
-          ? 'Already Assigned' 
-          : isAssigning 
-          ? 'Assigning...' 
-          : 'Assign Doctor'
+        {doctor.isCurrentlyAssigned
+          ? 'Already Assigned'
+          : isAssigning
+            ? 'Assigning...'
+            : 'Assign Doctor'
         }
       </motion.button>
     </motion.div>

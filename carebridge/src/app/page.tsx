@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import LampToggle from '@/components/LampToggle'
 import Logo from '@/components/Logo'
+import BackgroundAnimation from '@/components/BackgroundAnimation'
 
 export default function Home() {
   const [scrolled, setScrolled] = useState(false)
@@ -21,33 +22,27 @@ export default function Home() {
 
   return (
     <div className="min-h-screen text-slate-900 dark:text-white transition-colors duration-300 relative overflow-hidden" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
-      {/* Animated Background Elements */}
-      <motion.div 
-        style={{ y: backgroundY }}
-        className="fixed inset-0 pointer-events-none"
-      >
-        <div className="absolute top-20 left-10 w-32 h-32 bg-emerald-500/5 rounded-full blur-xl animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 bg-blue-500/5 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute bottom-40 left-1/4 w-40 h-40 bg-emerald-500/3 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/3 right-1/3 w-20 h-20 bg-blue-500/4 rounded-full blur-xl animate-pulse" style={{ animationDelay: '3s' }}></div>
-      </motion.div>
+      {/* Interactive Particle Background Animation */}
+      <BackgroundAnimation />
 
       {/* Navigation */}
-      <motion.nav 
+
+
+      {/* Navigation */}
+      <motion.nav
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-          scrolled 
-            ? 'navbar-scrolled' 
+        className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled
+            ? 'navbar-scrolled'
             : 'bg-transparent'
-        }`}
+          }`}
         style={{
-          background: scrolled 
-            ? 'var(--bg-card)' 
+          background: scrolled
+            ? 'var(--bg-card)'
             : 'transparent',
-          borderBottom: scrolled 
-            ? '1px solid var(--border-light)' 
+          borderBottom: scrolled
+            ? '1px solid var(--border-light)'
             : 'none'
         }}
       >
@@ -62,11 +57,11 @@ export default function Home() {
               className="flex items-center gap-3 hover-glow cursor-pointer group"
             >
               <motion.div
-                animate={{ 
+                animate={{
                   scale: [1, 1.1, 1],
                   rotate: [0, 5, -5, 0]
                 }}
-                transition={{ 
+                transition={{
                   duration: 2,
                   repeat: Infinity,
                   repeatType: "reverse",
@@ -77,7 +72,7 @@ export default function Home() {
               </motion.div>
               <span className="text-2xl font-bold text-gradient group-hover:text-emerald-400 transition-colors">CareBridge</span>
             </motion.a>
-            
+
             <div className="flex items-center gap-6 h-full">
               <div className="flex items-center h-full">
                 <LampToggle />
@@ -97,8 +92,8 @@ export default function Home() {
               </motion.a>
               <motion.a
                 href="/auth/signup"
-                whileHover={{ 
-                  scale: 1.05, 
+                whileHover={{
+                  scale: 1.05,
                   y: -2,
                   boxShadow: "0 10px 25px rgba(16, 185, 129, 0.3)"
                 }}
@@ -121,17 +116,17 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
             {/* Left Content */}
-            <motion.div 
+            <motion.div
               style={{ y: heroY }}
               className="max-w-2xl"
             >
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="inline-flex items-center gap-3 clean-card px-4 py-2 mb-8 hover-glow group cursor-pointer"
               >
-                <motion.div 
+                <motion.div
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   className="w-2 h-2 bg-emerald-500 rounded-full"
@@ -139,7 +134,7 @@ export default function Home() {
                 <span className="text-sm font-medium group-hover:text-emerald-400 transition-colors" style={{ color: 'var(--text-secondary)' }}>Privacy-First Healthcare</span>
               </motion.div>
 
-              <motion.h1 
+              <motion.h1
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
@@ -153,7 +148,7 @@ export default function Home() {
                   Your Health Records,
                 </motion.span>
                 <br />
-                <motion.span 
+                <motion.span
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.8 }}
@@ -169,11 +164,11 @@ export default function Home() {
                 </motion.span>
               </motion.h1>
 
-              <motion.p 
+              <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 1.0 }}
-                className="text-xl mb-10 leading-relaxed" 
+                className="text-xl mb-10 leading-relaxed"
                 style={{ color: 'var(--text-secondary)' }}
               >
                 CareBridge solves fragmented medical records by providing
@@ -181,7 +176,7 @@ export default function Home() {
                 your health data.
               </motion.p>
 
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 1.2 }}
@@ -189,8 +184,8 @@ export default function Home() {
               >
                 <motion.a
                   href="/auth/signup"
-                  whileHover={{ 
-                    scale: 1.05, 
+                  whileHover={{
+                    scale: 1.05,
                     y: -2,
                     boxShadow: "0 15px 35px rgba(16, 185, 129, 0.4)"
                   }}
@@ -215,7 +210,7 @@ export default function Home() {
                 </motion.a>
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 1.4 }}
@@ -225,19 +220,19 @@ export default function Home() {
                   { text: "HIPAA Compliant", delay: 0 },
                   { text: "End-to-End Encrypted", delay: 0.2 }
                 ].map((item, index) => (
-                  <motion.div 
+                  <motion.div
                     key={item.text}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.6, delay: 1.6 + item.delay }}
                     className="flex items-center gap-2 hover-scale cursor-pointer group"
                   >
-                    <motion.div 
-                      animate={{ 
+                    <motion.div
+                      animate={{
                         scale: [1, 1.1, 1],
                         rotate: [0, 180, 360]
                       }}
-                      transition={{ 
+                      transition={{
                         duration: 3,
                         repeat: Infinity,
                         ease: "easeInOut",
@@ -254,14 +249,14 @@ export default function Home() {
             </motion.div>
 
             {/* Right Dashboard Preview */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: 50, rotateY: 15 }}
               animate={{ opacity: 1, x: 0, rotateY: 0 }}
               transition={{ duration: 1, delay: 0.8, ease: "easeOut" }}
               className="lg:ml-16 perspective-1000"
             >
-              <motion.div 
-                whileHover={{ 
+              <motion.div
+                whileHover={{
                   y: -10,
                   rotateX: 5,
                   rotateY: -5,
@@ -276,10 +271,10 @@ export default function Home() {
               >
                 {/* Floating glow effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                
+
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-6">
-                    <motion.h3 
+                    <motion.h3
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.6, delay: 1.2 }}
@@ -287,18 +282,18 @@ export default function Home() {
                     >
                       Health Dashboard
                     </motion.h3>
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, scale: 0 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.6, delay: 1.4 }}
                       className="flex items-center gap-2"
                     >
-                      <motion.div 
-                        animate={{ 
+                      <motion.div
+                        animate={{
                           scale: [1, 1.3, 1],
                           opacity: [1, 0.7, 1]
                         }}
-                        transition={{ 
+                        transition={{
                           duration: 2,
                           repeat: Infinity,
                           ease: "easeInOut"
@@ -308,12 +303,12 @@ export default function Home() {
                       <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Live</span>
                     </motion.div>
                   </div>
-                  
-                  <motion.p 
+
+                  <motion.p
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 1.6 }}
-                    className="text-sm mb-6" 
+                    className="text-sm mb-6"
                     style={{ color: 'var(--text-muted)' }}
                   >
                     All your records in one secure place
@@ -329,12 +324,12 @@ export default function Home() {
                         key={item.text}
                         initial={{ opacity: 0, x: 20, scale: 0.9 }}
                         animate={{ opacity: 1, x: 0, scale: 1 }}
-                        transition={{ 
-                          duration: 0.6, 
+                        transition={{
+                          duration: 0.6,
                           delay: 1.8 + index * 0.2,
                           ease: "easeOut"
                         }}
-                        whileHover={{ 
+                        whileHover={{
                           scale: 1.02,
                           x: 5,
                           transition: { duration: 0.2 }
@@ -342,7 +337,7 @@ export default function Home() {
                         className="flex justify-between items-center p-4 glass-surface rounded-xl hover-glow cursor-pointer group/item"
                       >
                         <div className="flex items-center gap-3">
-                          <motion.span 
+                          <motion.span
                             whileHover={{ scale: 1.2, rotate: 10 }}
                             className="text-lg"
                           >
@@ -350,12 +345,12 @@ export default function Home() {
                           </motion.span>
                           <span className="text-sm font-medium group-hover/item:text-emerald-400 transition-colors">{item.text}</span>
                         </div>
-                        <motion.div 
-                          animate={{ 
+                        <motion.div
+                          animate={{
                             scale: [1, 1.2, 1],
                             opacity: [0.7, 1, 0.7]
                           }}
-                          transition={{ 
+                          transition={{
                             duration: 2 + index * 0.3,
                             repeat: Infinity,
                             ease: "easeInOut",
@@ -376,7 +371,7 @@ export default function Home() {
           </div>
 
           {/* How CareBridge Works Section */}
-          <motion.section 
+          <motion.section
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -385,10 +380,10 @@ export default function Home() {
           >
             {/* Background decoration */}
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-blue-500/5 rounded-3xl blur-3xl"></div>
-            
+
             <div className="relative z-10">
               <div className="text-center mb-16">
-                <motion.h2 
+                <motion.h2
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 }}
@@ -406,12 +401,12 @@ export default function Home() {
                     ></motion.div>
                   </span> Works
                 </motion.h2>
-                <motion.p 
+                <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.4 }}
                   viewport={{ once: true }}
-                  className="text-xl max-w-2xl mx-auto" 
+                  className="text-xl max-w-2xl mx-auto"
                   style={{ color: 'var(--text-secondary)' }}
                 >
                   A simple three-step process to take control of your health data
@@ -449,7 +444,7 @@ export default function Home() {
                     gradient: "from-emerald-500/20 to-emerald-600/20"
                   },
                   {
-                    step: "02", 
+                    step: "02",
                     title: "Control Access",
                     description: "Grant or revoke access to specific doctors. You decide who sees your health information.",
                     icon: "🔐",
@@ -458,7 +453,7 @@ export default function Home() {
                   },
                   {
                     step: "03",
-                    title: "Share Securely", 
+                    title: "Share Securely",
                     description: "Doctors with consent can view your records instantly. No more lost files or repeated tests.",
                     icon: "📋",
                     color: "purple",
@@ -469,13 +464,13 @@ export default function Home() {
                     key={item.step}
                     initial={{ opacity: 0, y: 50, scale: 0.9 }}
                     whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ 
-                      duration: 0.8, 
+                    transition={{
+                      duration: 0.8,
                       delay: 0.6 + index * 0.2,
                       ease: "easeOut"
                     }}
                     viewport={{ once: true, amount: 0.3 }}
-                    whileHover={{ 
+                    whileHover={{
                       y: -10,
                       scale: 1.02,
                       transition: { duration: 0.3 }
@@ -484,11 +479,11 @@ export default function Home() {
                   >
                     {/* Hover glow effect */}
                     <div className={`absolute inset-0 bg-gradient-to-br from-${item.color}-500/10 to-${item.color}-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
-                    
+
                     <div className="relative z-10">
                       <div className="flex items-center justify-center gap-4 mb-6">
-                        <motion.div 
-                          whileHover={{ 
+                        <motion.div
+                          whileHover={{
                             scale: 1.1,
                             rotate: [0, -10, 10, 0],
                             transition: { duration: 0.5 }
@@ -497,7 +492,7 @@ export default function Home() {
                         >
                           {item.icon}
                         </motion.div>
-                        <motion.span 
+                        <motion.span
                           initial={{ opacity: 0, scale: 0 }}
                           whileInView={{ opacity: 1, scale: 1 }}
                           transition={{ duration: 0.6, delay: 1 + index * 0.2 }}
@@ -506,11 +501,11 @@ export default function Home() {
                         >
                           {item.step}
                           <motion.div
-                            animate={{ 
+                            animate={{
                               scale: [1, 1.2, 1],
                               opacity: [0.5, 1, 0.5]
                             }}
-                            transition={{ 
+                            transition={{
                               duration: 2,
                               repeat: Infinity,
                               delay: index * 0.7
@@ -521,7 +516,7 @@ export default function Home() {
                           </motion.div>
                         </motion.span>
                       </div>
-                      <motion.h3 
+                      <motion.h3
                         initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.8 + index * 0.2 }}
@@ -530,12 +525,12 @@ export default function Home() {
                       >
                         {item.title}
                       </motion.h3>
-                      <motion.p 
+                      <motion.p
                         initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 1 + index * 0.2 }}
                         viewport={{ once: true }}
-                        className="mt-4" 
+                        className="mt-4"
                         style={{ color: 'var(--text-secondary)' }}
                       >
                         {item.description}
@@ -551,7 +546,7 @@ export default function Home() {
           </motion.section>
 
           {/* Trust & Security Section */}
-          <motion.section 
+          <motion.section
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -583,14 +578,14 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -50 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
                 viewport={{ once: true }}
                 className="max-w-xl"
               >
-                <motion.h2 
+                <motion.h2
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.4 }}
@@ -613,12 +608,12 @@ export default function Home() {
                     ></motion.div>
                   </span>
                 </motion.h2>
-                <motion.p 
+                <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.6 }}
                   viewport={{ once: true }}
-                  className="text-xl mb-12" 
+                  className="text-xl mb-12"
                   style={{ color: 'var(--text-secondary)' }}
                 >
                   We use enterprise-grade security to protect your
@@ -640,7 +635,7 @@ export default function Home() {
                       delay: 1.0
                     },
                     {
-                      title: "Instant Revocation", 
+                      title: "Instant Revocation",
                       description: "Remove access instantly from any healthcare provider.",
                       icon: "⚡",
                       delay: 1.2
@@ -652,14 +647,14 @@ export default function Home() {
                       whileInView={{ opacity: 1, x: 0, scale: 1 }}
                       transition={{ duration: 0.8, delay: feature.delay }}
                       viewport={{ once: true }}
-                      whileHover={{ 
+                      whileHover={{
                         x: 10,
                         transition: { duration: 0.3 }
                       }}
                       className="flex items-start gap-4 p-4 rounded-xl hover:bg-emerald-500/5 transition-all duration-300 cursor-pointer group"
                     >
-                      <motion.div 
-                        whileHover={{ 
+                      <motion.div
+                        whileHover={{
                           scale: 1.2,
                           rotate: [0, -10, 10, 0]
                         }}
@@ -669,7 +664,7 @@ export default function Home() {
                         {feature.icon}
                       </motion.div>
                       <div>
-                        <motion.h4 
+                        <motion.h4
                           className="heading-md mb-2 group-hover:text-emerald-400 transition-colors"
                         >
                           {feature.title}
@@ -682,15 +677,15 @@ export default function Home() {
               </motion.div>
 
               {/* Access Control Preview */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: 50, rotateY: -15 }}
                 whileInView={{ opacity: 1, x: 0, rotateY: 0 }}
                 transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
                 viewport={{ once: true }}
                 className="lg:ml-16"
               >
-                <motion.div 
-                  whileHover={{ 
+                <motion.div
+                  whileHover={{
                     y: -5,
                     scale: 1.02,
                     rotateX: 2,
@@ -719,7 +714,7 @@ export default function Home() {
 
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-6">
-                      <motion.h3 
+                      <motion.h3
                         initial={{ opacity: 0, x: -20 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6, delay: 0.8 }}
@@ -735,7 +730,7 @@ export default function Home() {
                         </motion.span>
                         Access Control
                       </motion.h3>
-                      <motion.span 
+                      <motion.span
                         initial={{ opacity: 0, scale: 0 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.6, delay: 1.0 }}
@@ -758,7 +753,7 @@ export default function Home() {
                           whileInView={{ opacity: 1, y: 0, scale: 1 }}
                           transition={{ duration: 0.6, delay: 1.2 + index * 0.2 }}
                           viewport={{ once: true }}
-                          whileHover={{ 
+                          whileHover={{
                             scale: 1.02,
                             x: 5,
                             transition: { duration: 0.2 }
@@ -766,7 +761,7 @@ export default function Home() {
                           className="flex items-center justify-between p-4 glass-surface rounded-xl group/doctor cursor-pointer"
                         >
                           <div className="flex items-center gap-3">
-                            <motion.div 
+                            <motion.div
                               whileHover={{ scale: 1.1, rotate: 5 }}
                               className={`w-12 h-12 ${doctor.color} rounded-xl flex items-center justify-center relative overflow-hidden`}
                             >
@@ -782,20 +777,19 @@ export default function Home() {
                               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{doctor.specialty}</p>
                             </div>
                           </div>
-                          <motion.div 
-                            animate={{ 
+                          <motion.div
+                            animate={{
                               scale: doctor.status === 'active' ? [1, 1.2, 1] : [1, 1.1, 1],
                               opacity: doctor.status === 'active' ? [1, 0.7, 1] : [0.5, 1, 0.5]
                             }}
-                            transition={{ 
+                            transition={{
                               duration: doctor.status === 'active' ? 2 : 3,
                               repeat: Infinity,
                               ease: "easeInOut",
                               delay: index * 0.5
                             }}
-                            className={`w-3 h-3 rounded-full ${
-                              doctor.status === 'active' ? 'bg-emerald-500' : 'bg-yellow-500'
-                            }`}
+                            className={`w-3 h-3 rounded-full ${doctor.status === 'active' ? 'bg-emerald-500' : 'bg-yellow-500'
+                              }`}
                           ></motion.div>
                         </motion.div>
                       ))}
@@ -818,7 +812,7 @@ export default function Home() {
           </motion.section>
 
           {/* CTA Section */}
-          <motion.section 
+          <motion.section
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -842,7 +836,7 @@ export default function Home() {
                 }}
                 className="absolute inset-0 blur-3xl"
               ></motion.div>
-              
+
               {/* Floating particles */}
               {[...Array(8)].map((_, i) => (
                 <motion.div
@@ -868,8 +862,8 @@ export default function Home() {
               ))}
             </div>
 
-            <motion.div 
-              whileHover={{ 
+            <motion.div
+              whileHover={{
                 scale: 1.01,
                 y: -5
               }}
@@ -882,9 +876,9 @@ export default function Home() {
             >
               {/* Hover glow effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              
+
               <div className="relative z-10">
-                <motion.h2 
+                <motion.h2
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 }}
@@ -909,19 +903,19 @@ export default function Home() {
                   </span>
                   ?
                 </motion.h2>
-                <motion.p 
+                <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.4 }}
                   viewport={{ once: true }}
-                  className="text-xl mb-12 max-w-2xl mx-auto" 
+                  className="text-xl mb-12 max-w-2xl mx-auto"
                   style={{ color: 'var(--text-secondary)' }}
                 >
                   Join thousands of patients and healthcare providers who trust CareBridge for
                   secure, seamless health record management.
                 </motion.p>
 
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.6 }}
@@ -930,8 +924,8 @@ export default function Home() {
                 >
                   <motion.a
                     href="/auth/signup"
-                    whileHover={{ 
-                      scale: 1.05, 
+                    whileHover={{
+                      scale: 1.05,
                       y: -3,
                       boxShadow: "0 20px 40px rgba(16, 185, 129, 0.4)"
                     }}
@@ -953,7 +947,7 @@ export default function Home() {
                       transition={{ duration: 0.6 }}
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                     ></motion.div>
-                    
+
                     {/* Pulse effect */}
                     <motion.div
                       animate={{
@@ -968,11 +962,11 @@ export default function Home() {
                       className="absolute inset-0 bg-emerald-500 rounded-lg"
                     ></motion.div>
                   </motion.a>
-                  
+
                   <motion.a
                     href="/auth/login"
-                    whileHover={{ 
-                      scale: 1.02, 
+                    whileHover={{
+                      scale: 1.02,
                       y: -2,
                       borderColor: "rgba(16, 185, 129, 0.5)"
                     }}
@@ -1025,19 +1019,19 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <motion.footer 
+      <motion.footer
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="border-t mt-32 py-12 relative overflow-hidden" 
+        className="border-t mt-32 py-12 relative overflow-hidden"
         style={{ borderColor: 'var(--border-light)' }}
       >
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-blue-500/5 opacity-50"></div>
-        
+
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between relative z-10">
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.02 }}
             className="flex items-center gap-3 cursor-pointer group"
           >
@@ -1049,13 +1043,13 @@ export default function Home() {
             </motion.div>
             <span className="text-xl font-bold group-hover:text-emerald-400 transition-colors">CareBridge</span>
           </motion.div>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             viewport={{ once: true }}
-            className="text-sm" 
+            className="text-sm"
             style={{ color: 'var(--text-muted)' }}
           >
             © 2026 CareBridge. All rights reserved.{" "}
