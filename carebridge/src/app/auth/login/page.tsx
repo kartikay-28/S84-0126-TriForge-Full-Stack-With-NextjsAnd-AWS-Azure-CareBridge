@@ -89,21 +89,21 @@ export default function LoginPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
           className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-6"
-          style={{ background: 'var(--background)', color: 'var(--foreground)' }}
+          style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
         >
           {/* Theme Toggle - Fixed Position */}
           <div className="fixed top-6 right-6 z-50">
             <LampToggle />
           </div>
 
-          <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-16 items-center">
+          <div className="w-full max-w-2xl flex flex-col items-center gap-12">
 
-            {/* Left Side - Welcome Content */}
+            {/* Top Side - branding & Welcome Content */}
             <motion.div
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="space-y-8"
+              className="space-y-8 flex flex-col items-center text-center"
             >
               {/* Logo */}
               <motion.a
@@ -112,15 +112,15 @@ export default function LoginPage() {
                 className="flex items-center gap-3 hover-glow cursor-pointer"
               >
                 <Logo size="lg" />
-                <span className="text-2xl font-bold">CareBridge</span>
+                <span className="text-3xl font-bold">CareBridge</span>
               </motion.a>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <motion.h1
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.3 }}
-                  className="text-4xl lg:text-5xl font-bold text-white"
+                  className="text-4xl lg:text-6xl font-extrabold text-white tracking-tight"
                 >
                   Welcome back
                 </motion.h1>
@@ -128,48 +128,19 @@ export default function LoginPage() {
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.4 }}
-                  className="text-slate-400 text-lg leading-relaxed max-w-md"
+                  className="text-slate-400 text-xl leading-relaxed max-w-md"
                 >
                   Sign in to access your health dashboard
                 </motion.p>
               </div>
-
-              {/* Feature Cards */}
-              <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-                className="space-y-4 max-w-md"
-              >
-                <motion.div
-                  whileHover={{ scale: 1.02, x: 10 }}
-                  className="clean-card p-4 flex items-center gap-4"
-                >
-                  <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                    <span className="text-emerald-400">🔒</span>
-                  </div>
-                  <div>
-                    <p className="text-white font-medium text-sm">End-to-end encrypted</p>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ scale: 1.02, x: 10 }}
-                  className="clean-card p-4"
-                >
-                  <p className="text-slate-300 text-sm text-center">
-                    Trusted by healthcare professionals worldwide
-                  </p>
-                </motion.div>
-              </motion.div>
             </motion.div>
 
-            {/* Right Side - Login Form */}
+            {/* Center Side - Login Form */}
             <motion.div
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="max-w-md mx-auto w-full"
+              className="max-w-md w-full"
             >
               <motion.form
                 initial={{ y: 30, opacity: 0 }}
@@ -190,7 +161,7 @@ export default function LoginPage() {
                       })}
                       type="email"
                       placeholder="you@example.com"
-                      className="clean-input"
+                      className="clean-input !bg-slate-800/10 backdrop-blur-md border-slate-700/30"
                       disabled={isSubmitting}
                     />
                     <AnimatePresence>
@@ -217,7 +188,7 @@ export default function LoginPage() {
                       })}
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
-                      className="clean-input pr-12"
+                      className="clean-input pr-12 !bg-slate-800/10 backdrop-blur-md border-slate-700/30"
                       disabled={isSubmitting}
                     />
                     <motion.button
@@ -254,7 +225,7 @@ export default function LoginPage() {
                             stroke="currentColor"
                           >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268-2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </motion.svg>
                         )}
                       </AnimatePresence>
@@ -279,7 +250,7 @@ export default function LoginPage() {
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   disabled={isSubmitting}
-                  className="cta-button w-full"
+                  className="cta-button w-full shadow-emerald-500/20 shadow-lg py-4 text-base"
                 >
                   <AnimatePresence mode="wait">
                     {isSubmitting ? (
@@ -288,7 +259,7 @@ export default function LoginPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="flex items-center gap-2"
+                        className="flex items-center justify-center gap-2"
                       >
                         <motion.svg
                           animate={{ rotate: 360 }}
@@ -308,9 +279,9 @@ export default function LoginPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="flex items-center gap-2"
+                        className="flex items-center justify-center gap-2"
                       >
-                        <span>Sign In</span>
+                        <span className="font-bold">Sign In</span>
                         <motion.span
                           animate={{ x: [0, 5, 0] }}
                           transition={{ duration: 1.5, repeat: Infinity }}
@@ -327,18 +298,53 @@ export default function LoginPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                className="text-slate-400 text-center mt-6"
+                className="text-slate-400 text-center mt-8 text-base"
               >
                 Don't have an account?{" "}
                 <motion.a
                   href="/auth/signup"
                   whileHover={{ scale: 1.05 }}
-                  className="text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+                  className="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold"
                 >
                   Create account
                 </motion.a>
               </motion.p>
             </motion.div>
+
+            {/* Bottom - Feature Cards */}
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full"
+            >
+              <motion.div
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="clean-card p-4 flex flex-col items-center gap-2 text-center !bg-slate-800/10 backdrop-blur-md border-slate-700/30"
+              >
+                <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center mb-1">
+                  <span className="text-xl text-emerald-400">🔒</span>
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-sm">End-to-end encrypted</p>
+                  <p className="text-slate-400 text-xs mt-0.5">Your data is safe with us</p>
+                </div>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="clean-card p-4 flex flex-col items-center gap-2 text-center !bg-slate-800/10 backdrop-blur-md border-slate-700/30"
+              >
+                <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center mb-1">
+                  <span className="text-xl text-blue-400">🌍</span>
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-sm">Trusted Worldwide</p>
+                  <p className="text-slate-400 text-xs mt-0.5">Used by professionals globally</p>
+                </div>
+              </motion.div>
+            </motion.div>
+
           </div>
         </motion.main>
 
