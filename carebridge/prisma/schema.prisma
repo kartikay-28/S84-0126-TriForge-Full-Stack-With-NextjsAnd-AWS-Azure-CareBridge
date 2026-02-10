@@ -27,6 +27,9 @@ model User {
   sentMessages       Message[]       @relation("MessageSender")
   receivedMessages   Message[]       @relation("MessageReceiver")
   healthMetrics      HealthMetric[]
+  doctorAppointments  Appointment[]  @relation("DoctorAppointments")
+  patientAppointments Appointment[]  @relation("PatientAppointments")
+  createdAppointments Appointment[]  @relation("CreatedAppointments")
 
   @@map("users")
 }
@@ -226,4 +229,28 @@ model HealthMetric {
 
   @@index([patientId])
   @@map("health_metrics")
+}
+
+
+model Appointment {
+  id              String   @id @default(cuid())
+  doctorId        String
+  patientId       String
+  scheduledAt     DateTime
+  durationMinutes Int
+  meetLink        String
+  notes           String?
+  createdById     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  doctor    User @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade)
+  patient   User @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  createdBy User @relation("CreatedAppointments", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, patientId, scheduledAt])
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([scheduledAt])
+  @@map("appointments")
 }

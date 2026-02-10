@@ -65,6 +65,18 @@ export default function PatientDashboard() {
   const [messagesLoading, setMessagesLoading] = useState(false)
   const [messageInput, setMessageInput] = useState('')
   const [messagesError, setMessagesError] = useState<string | null>(null)
+  const [appointments, setAppointments] = useState<any[]>([])
+  const [appointmentsLoading, setAppointmentsLoading] = useState(false)
+  const [appointmentsError, setAppointmentsError] = useState<string | null>(null)
+  const [appointmentSaving, setAppointmentSaving] = useState(false)
+  const [showAppointmentForm, setShowAppointmentForm] = useState(false)
+  const [appointmentDoctorId, setAppointmentDoctorId] = useState('')
+  const [appointmentDate, setAppointmentDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [appointmentTime, setAppointmentTime] = useState('09:00')
+  const [appointmentDuration, setAppointmentDuration] = useState(30)
+  const [appointmentMeetLink, setAppointmentMeetLink] = useState('')
+  const [appointmentNotes, setAppointmentNotes] = useState('')
+  const [agendaStartDate] = useState(() => new Date().toISOString().slice(0, 10))
 
   const getChatDateKey = (value?: string) => {
     if (!value) return null
@@ -78,6 +90,53 @@ export default function PatientDashboard() {
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) return ''
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+  }
+
+  const formatAppointmentDate = (value?: string) => {
+    if (!value) return ''
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return ''
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  }
+
+  const getAgendaRange = (start: string) => {
+    const rangeStart = new Date(`${start}T00:00:00`)
+    const rangeEnd = new Date(rangeStart)
+    rangeEnd.setDate(rangeStart.getDate() + 6)
+    return { rangeStart, rangeEnd }
+  }
+
+  const getTodayDate = () => new Date().toISOString().slice(0, 10)
+
+  const buildTimeSlots = (dateValue: string) => {
+    if (!dateValue) return []
+    const slots: string[] = []
+    const today = getTodayDate()
+    const now = new Date()
+    const startMinutes = 9 * 60
+    const endMinutes = 18 * 60
+    for (let totalMinutes = startMinutes; totalMinutes <= endMinutes; totalMinutes += 30) {
+      const hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0')
+      const minutes = String(totalMinutes % 60).padStart(2, '0')
+      const slot = `${hours}:${minutes}`
+      if (dateValue === today) {
+        const slotTime = new Date(`${dateValue}T${slot}:00`)
+        if (Number.isNaN(slotTime.getTime()) || slotTime.getTime() <= now.getTime()) {
+          continue
+        }
+      }
+      slots.push(slot)
+    }
+    return slots
+  }
+
+  const isValidMeetLink = (value: string) => {
+    try {
+      const url = new URL(value)
+      return url.hostname === 'meet.google.com'
+    } catch (error) {
+      return false
+    }
   }
 
   const selectedMessageDoctor =
@@ -245,6 +304,25 @@ export default function PatientDashboard() {
       fetchAssignedDoctors()
     }
   }, [activeTab])
+
+  useEffect(() => {
+    if (assignedDoctors.length > 0 && !appointmentDoctorId) {
+      setAppointmentDoctorId(assignedDoctors[0].id)
+    }
+  }, [assignedDoctors, appointmentDoctorId])
+
+  useEffect(() => {
+    const slots = buildTimeSlots(appointmentDate)
+    if (!slots.includes(appointmentTime)) {
+      setAppointmentTime(slots[0] || '')
+    }
+  }, [appointmentDate])
+
+  useEffect(() => {
+    if (activeTab === 'dashboard' && dashboardData?.sectionVisibility?.appointments?.visible) {
+      fetchAppointments(agendaStartDate)
+    }
+  }, [activeTab, agendaStartDate, dashboardData?.sectionVisibility?.appointments?.visible])
 
   useEffect(() => {
     if (!selectedMessageDoctor) {
@@ -474,6 +552,115 @@ export default function PatientDashboard() {
       setHealthMetrics([])
     } finally {
       setMetricsLoading(false)
+    }
+  }
+
+  const fetchAppointments = async (startDate?: string) => {
+    setAppointmentsLoading(true)
+    setAppointmentsError(null)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      const params = new URLSearchParams()
+      if (startDate) {
+        const { rangeStart, rangeEnd } = getAgendaRange(startDate)
+        params.set('from', rangeStart.toISOString().slice(0, 10))
+        params.set('to', rangeEnd.toISOString().slice(0, 10))
+      }
+      const response = await fetch(`/api/appointments/weekly?${params.toString()}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        setAppointmentsError(errorData.error || 'Failed to load appointments')
+        setAppointments([])
+        return
+      }
+      const data = await response.json()
+      setAppointments(data.appointments || [])
+    } catch (error) {
+      setAppointmentsError('Failed to load appointments')
+      setAppointments([])
+    } finally {
+      setAppointmentsLoading(false)
+    }
+  }
+
+  const handleCreateAppointment = async () => {
+    const selectedDateTime = new Date(`${appointmentDate}T${appointmentTime}:00`)
+    if (Number.isNaN(selectedDateTime.getTime()) || selectedDateTime.getTime() <= Date.now()) {
+      setAppointmentsError('Please choose a future date and time')
+      return
+    }
+    if (!appointmentTime) {
+      setAppointmentsError('Select a time slot')
+      return
+    }
+    if (!appointmentDoctorId) {
+      setAppointmentsError('Select a doctor to schedule a meeting')
+      return
+    }
+    if (!appointmentMeetLink || !isValidMeetLink(appointmentMeetLink)) {
+      setAppointmentsError('Add a valid Google Meet link')
+      return
+    }
+    setAppointmentSaving(true)
+    setAppointmentsError(null)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      const response = await fetch('/api/appointments/weekly', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          doctorId: appointmentDoctorId,
+          date: appointmentDate,
+          startTime: appointmentTime,
+          durationMinutes: appointmentDuration,
+          meetLink: appointmentMeetLink,
+          notes: appointmentNotes
+        })
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        setAppointmentsError(errorData.error || 'Failed to schedule meeting')
+        return
+      }
+      await fetchAppointments(agendaStartDate)
+      setAppointmentNotes('')
+      setAppointmentDuration(30)
+      setAppointmentTime('09:00')
+      setAppointmentMeetLink('')
+      setShowAppointmentForm(false)
+    } catch (error) {
+      setAppointmentsError('Failed to schedule meeting')
+    } finally {
+      setAppointmentSaving(false)
+    }
+  }
+
+  const handleDeleteAppointment = async (appointmentId: string) => {
+    const confirmDelete = window.confirm('Delete this appointment?')
+    if (!confirmDelete) return
+    setAppointmentsError(null)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
+      const response = await fetch(`/api/appointments/weekly?id=${appointmentId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        setAppointmentsError(errorData.error || 'Failed to delete appointment')
+        return
+      }
+      await fetchAppointments(agendaStartDate)
+    } catch (error) {
+      setAppointmentsError('Failed to delete appointment')
     }
   }
 
@@ -994,6 +1181,212 @@ export default function PatientDashboard() {
                         Review Requests
                       </motion.button>
                     </motion.div>
+                  </div>
+
+                  {/* Appointments Calendar */}
+                  <div className="mb-8">
+                    {dashboardData?.sectionVisibility?.appointments?.visible ? (
+                      <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover-lift">
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                              <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-white">Appointments Calendar</h3>
+                              <p className="text-slate-400 text-sm">Date-wise schedule with your care team</p>
+                            </div>
+                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setShowAppointmentForm(prev => !prev)}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors"
+                          >
+                            {showAppointmentForm ? 'Hide Form' : 'Add Meeting'}
+                          </motion.button>
+                        </div>
+
+                        {appointmentsError && (
+                          <p className="text-rose-300 text-sm mb-3">{appointmentsError}</p>
+                        )}
+
+                        {showAppointmentForm && (
+                          <div className="mb-6 rounded-xl border border-slate-600/70 bg-slate-900/80 p-4">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="w-9 h-9 rounded-lg bg-emerald-400/30 border border-emerald-300/70 shadow-[0_0_12px_rgba(16,185,129,0.35)] flex items-center justify-center">
+                                <svg className="w-5 h-5 text-emerald-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-white">New Appointment</p>
+                                <p className="text-xs text-slate-400">Add a date, time, and Meet link</p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                              <div className="space-y-2">
+                                <label className="text-xs text-slate-300">Doctor</label>
+                                <select
+                                  value={appointmentDoctorId}
+                                  onChange={(event) => setAppointmentDoctorId(event.target.value)}
+                                  className="w-full bg-slate-950/70 border border-slate-600/70 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                >
+                                  <option value="">Select doctor</option>
+                                  {assignedDoctors.map(doctor => (
+                                    <option key={doctor.id} value={doctor.id}>Dr {doctor.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-xs text-slate-300">Date</label>
+                                <input
+                                  type="date"
+                                  min={getTodayDate()}
+                                  value={appointmentDate}
+                                  onChange={(event) => setAppointmentDate(event.target.value)}
+                                  className="w-full bg-slate-950/70 border border-slate-600/70 rounded-lg px-3 py-2 text-sm text-white [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-xs text-slate-300">Time</label>
+                                <select
+                                  value={appointmentTime}
+                                  onChange={(event) => setAppointmentTime(event.target.value)}
+                                  className="w-full bg-slate-950/70 border border-slate-600/70 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                >
+                                  {buildTimeSlots(appointmentDate).length === 0 ? (
+                                    <option value="">No future slots</option>
+                                  ) : (
+                                    buildTimeSlots(appointmentDate).map(slot => (
+                                      <option key={slot} value={slot}>{slot}</option>
+                                    ))
+                                  )}
+                                </select>
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-xs text-slate-300">Duration (min)</label>
+                                <input
+                                  type="number"
+                                  min={5}
+                                  step={5}
+                                  value={appointmentDuration}
+                                  onChange={(event) => setAppointmentDuration(Number(event.target.value))}
+                                  className="w-full bg-slate-950/70 border border-slate-600/70 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-xs text-slate-300">Meet Link</label>
+                                <input
+                                  type="text"
+                                  value={appointmentMeetLink}
+                                  onChange={(event) => setAppointmentMeetLink(event.target.value)}
+                                  placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                                  className="w-full bg-slate-950/70 border border-slate-600/70 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-xs text-slate-300">Notes</label>
+                                <input
+                                  type="text"
+                                  value={appointmentNotes}
+                                  onChange={(event) => setAppointmentNotes(event.target.value)}
+                                  placeholder="Follow-up on symptoms"
+                                  className="w-full bg-slate-950/70 border border-slate-600/70 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                />
+                              </div>
+                            </div>
+                            <div className="mt-4 flex items-center justify-end gap-3">
+                              <button
+                                onClick={() => setShowAppointmentForm(false)}
+                                className="px-4 py-2 text-sm text-slate-300 hover:text-white"
+                              >
+                                Cancel
+                              </button>
+                              <motion.button
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={handleCreateAppointment}
+                                disabled={appointmentSaving}
+                                className="bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                              >
+                                {appointmentSaving ? 'Saving...' : 'Save Meeting'}
+                              </motion.button>
+                            </div>
+                          </div>
+                        )}
+
+                        {appointmentsLoading ? (
+                          <div className="flex items-center justify-center py-8 text-slate-400">
+                            <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                            <span className="ml-3">Loading appointments...</span>
+                          </div>
+                        ) : appointments.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-8 text-center">
+                            <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+                              <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                            <h4 className="font-medium text-white mb-2">No appointments yet</h4>
+                            <p className="text-slate-400 text-sm">Schedule a date-specific appointment with your doctor.</p>
+                          </div>
+                        ) : (
+                          <div className="divide-y divide-slate-800/80">
+                            {appointments.map((appointment: any) => (
+                              <div key={appointment.id} className="py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex items-start gap-3 min-w-0">
+                                  <div className="rounded-lg border border-slate-700/80 bg-slate-900/70 px-3 py-2 text-xs text-slate-300">
+                                    <div className="text-white font-medium">
+                                      {formatAppointmentDate(appointment.scheduledAt)}
+                                    </div>
+                                    <div className="text-slate-400">
+                                      {new Date(appointment.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {appointment.durationMinutes}m
+                                    </div>
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-medium text-white truncate">Dr {appointment.doctor?.name || 'Doctor'}</p>
+                                    {appointment.notes && (
+                                      <p className="text-xs text-slate-500 truncate">{appointment.notes}</p>
+                                    )}
+                                    <p className="text-[11px] text-slate-600">Created by {appointment.createdBy?.name || 'User'}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <a
+                                    href={appointment.meetLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-emerald-400 hover:text-emerald-300 text-xs font-medium"
+                                  >
+                                    Join meeting
+                                  </a>
+                                  <button
+                                    onClick={() => handleDeleteAppointment(appointment.id)}
+                                    className="text-xs text-rose-300 hover:text-rose-200"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <SectionLock
+                        title="Appointments Locked"
+                        message={dashboardData?.sectionVisibility?.appointments?.message || 'Complete your profile to access appointments.'}
+                        onUnlock={() => router.push('/dashboard/patient/profile')}
+                        icon={
+                          <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        }
+                      />
+                    )}
                   </div>
 
                   {/* Bottom Sections */}
