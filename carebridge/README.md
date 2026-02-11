@@ -156,6 +156,10 @@ npx eslint .
 
 After deployment, the live application URL was tested to ensure successful build and hosting. All major features and API endpoints were verified to be functioning correctly in the production environment. Environment variables were properly configured, and no runtime errors were observed in logs. This confirms the application is successfully deployed and stable.
 
+📝 Form Handling & Validation
+
+Forms are handled using controlled components to manage user input through state. Input validation ensures required fields are filled and data formats (like email, password length, etc.) are correct before submission. Client-side validation improves user experience by preventing invalid data from being sent to the server. Error messages are displayed dynamically for better usability.
+
 ## 📜 License
 
 This project is licensed under the **MIT License**.
