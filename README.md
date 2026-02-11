@@ -221,6 +221,10 @@ The MVP is fully functional and demo-ready.
 
 ---
 
+📊 Logging & Monitoring
+
+Logging is implemented to track application activities, errors, and system events for easier debugging and maintenance. Monitoring tools help observe application performance, uptime, and resource usage in the production environment. Error logs and server logs are reviewed regularly to detect and resolve issues quickly. This ensures better reliability, stability, and performance of the deployed application.
+
 # 🌍 Multi-Environment Deployment
 
 CareBridge supports:
