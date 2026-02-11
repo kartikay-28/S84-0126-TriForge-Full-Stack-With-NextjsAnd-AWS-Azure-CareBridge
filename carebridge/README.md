@@ -152,6 +152,10 @@ To check for errors:
 
 npx eslint .
 
+🚀 Deployment Verification
+
+After deployment, the live application URL was tested to ensure successful build and hosting. All major features and API endpoints were verified to be functioning correctly in the production environment. Environment variables were properly configured, and no runtime errors were observed in logs. This confirms the application is successfully deployed and stable.
+
 ## 📜 License
 
 This project is licensed under the **MIT License**.
