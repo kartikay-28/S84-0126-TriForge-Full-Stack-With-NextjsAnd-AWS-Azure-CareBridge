@@ -160,6 +160,10 @@ After deployment, the live application URL was tested to ensure successful build
 
 Forms are handled using controlled components to manage user input through state. Input validation ensures required fields are filled and data formats (like email, password length, etc.) are correct before submission. Client-side validation improves user experience by preventing invalid data from being sent to the server. Error messages are displayed dynamically for better usability.
 
+⚡ Advanced Data Fetching: Static, Dynamic & Hybrid Rendering (App Router)
+
+The App Router in Next.js supports multiple rendering strategies for optimized performance. Static Rendering pre-renders pages at build time for fast performance and SEO benefits. Dynamic Rendering fetches data on each request, ensuring real-time updates. Hybrid Rendering combines both approaches, allowing certain parts of a page to be static while others remain dynamic, providing a balance between performance and freshness of data.
+
 ## 📜 License
 
 This project is licensed under the **MIT License**.
