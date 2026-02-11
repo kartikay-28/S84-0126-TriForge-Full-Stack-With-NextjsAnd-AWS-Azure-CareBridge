@@ -225,6 +225,10 @@ The MVP is fully functional and demo-ready.
 
 Logging is implemented to track application activities, errors, and system events for easier debugging and maintenance. Monitoring tools help observe application performance, uptime, and resource usage in the production environment. Error logs and server logs are reviewed regularly to detect and resolve issues quickly. This ensures better reliability, stability, and performance of the deployed application.
 
+🌐 Client-side Data Fetching (SWR / Fetch API)
+
+Client-side data fetching is used to retrieve data directly in the browser after the page loads. The Fetch API allows making HTTP requests to backend services, while SWR (Stale-While-Revalidate) improves performance by caching data and revalidating it in the background. This approach enables real-time updates, better user experience, and dynamic UI rendering without full page reloads.
+
 # 🌍 Multi-Environment Deployment
 
 CareBridge supports:
