@@ -99,6 +99,59 @@ CareBridge is a **team-based college project**, developed collaboratively to gai
 
 ---
 
+🧹 ESLint Configuration Setup
+
+ESLint is used to maintain code quality and enforce consistent coding standards across the project.
+
+📦 Installation
+npm install eslint --save-dev
+
+
+For React projects:
+
+npx eslint --init
+
+
+Follow the setup prompts:
+
+Choose JavaScript / TypeScript
+
+Select React (if applicable)
+
+Choose a style guide (Airbnb / Standard / None)
+
+Select JSON format for configuration
+
+📁 Configuration File
+
+After setup, ESLint creates a configuration file:
+
+.eslintrc.json (or .eslintrc.js)
+
+Example:
+
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": ["eslint:recommended", "plugin:react/recommended"],
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "rules": {
+    "no-unused-vars": "warn",
+    "no-console": "off"
+  }
+}
+
+▶️ Running ESLint
+
+To check for errors:
+
+npx eslint .
+
 ## 📜 License
 
 This project is licensed under the **MIT License**.
